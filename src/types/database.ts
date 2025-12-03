@@ -91,3 +91,99 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
+
+// Phase 4 Types
+export type EmailStatus = 'QUEUED' | 'SENT' | 'FAILED';
+export type TrackingConsent = 'GRANTED' | 'DENIED' | 'UNKNOWN';
+export type WebEventType = 'PAGE_VIEW' | 'PRODUCT_VIEW' | 'CATEGORY_VIEW' | 'ADD_TO_CART' | 'CHECKOUT_START';
+
+export interface EmailTemplate {
+  id: string;
+  template_key: string;
+  name: string;
+  subject_template: string;
+  body_template: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailMessage {
+  id: string;
+  contact_id: string;
+  template_id: string | null;
+  type_key: string | null;
+  to_email: string;
+  subject: string;
+  body: string;
+  status: EmailStatus;
+  related_order_id: string | null;
+  related_basket_id: string | null;
+  sent_at: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  template?: EmailTemplate;
+  order?: Order;
+}
+
+export interface WebSession {
+  id: string;
+  contact_id: string;
+  session_token: string;
+  started_at: string;
+  ended_at: string | null;
+  user_agent: string | null;
+  ip_hash: string | null;
+  events?: WebEvent[];
+}
+
+export interface WebEvent {
+  id: string;
+  session_id: string;
+  event_type: WebEventType;
+  url: string;
+  product_id: string | null;
+  product_name: string | null;
+  category_name: string | null;
+  occurred_at: string;
+  visit_index: number | null;
+}
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  product_name: string;
+  category_name: string;
+  main_category: string;
+  quantity: number;
+  unit_price: number;
+  line_total: number;
+  created_at: string;
+}
+
+export interface Order {
+  id: string;
+  order_number: string;
+  customer_id: string;
+  buyer_contact_id: string | null;
+  account_id: string | null;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  customer?: Customer;
+  items?: OrderItem[];
+}
+
+export interface CategoryAffinity {
+  mainCategory: string;
+  totalSpend: number;
+  totalQuantity: number;
+  categories: {
+    name: string;
+    spend: number;
+    quantity: number;
+  }[];
+}

@@ -16,6 +16,9 @@ import { RolesTab } from '@/components/RolesTab';
 import { RolePreferencesOverview } from '@/components/RolePreferencesOverview';
 import { UserAccountManagement } from '@/components/UserAccountManagement';
 import { MergeHistory } from '@/components/MergeHistory';
+import { CommunicationTab } from '@/components/CommunicationTab';
+import { WebActivityTab } from '@/components/WebActivityTab';
+import { CategoryAffinityPanel } from '@/components/CategoryAffinityPanel';
 import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment, Profile } from '@/types/database';
 import {
   Users,
@@ -28,6 +31,8 @@ import {
   Plus,
   Bell,
   KeyRound,
+  Mail,
+  Globe,
 } from 'lucide-react';
 
 export default function ContactDetail() {
@@ -186,7 +191,7 @@ export default function ContactDetail() {
 
         {/* Tabs for main content */}
         <Tabs defaultValue="info" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap">
             <TabsTrigger value="info">Översikt</TabsTrigger>
             <TabsTrigger value="roles" className="gap-2">
               <Bell className="h-4 w-4" />
@@ -196,6 +201,14 @@ export default function ContactDetail() {
               <ShoppingCart className="h-4 w-4" />
               Ordrar
             </TabsTrigger>
+            <TabsTrigger value="communication" className="gap-2">
+              <Mail className="h-4 w-4" />
+              Kommunikation
+            </TabsTrigger>
+            <TabsTrigger value="webactivity" className="gap-2">
+              <Globe className="h-4 w-4" />
+              Webbaktivitet
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="info" className="space-y-6">
@@ -204,58 +217,61 @@ export default function ContactDetail() {
               {/* Basic Info with Inline Edit */}
               <InlineEditContact contact={contact} onUpdate={fetchContactData} roleCount={customerLinks.length} />
 
-              {/* Customer Links */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="font-display text-lg flex items-center gap-2">
-                        <Building2 className="h-5 w-5 text-customer" />
-                        Kopplingar till kunder ({customerLinks.length})
-                      </CardTitle>
-                      <CardDescription>Kunder som denna kontakt är kopplad till</CardDescription>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => setAddCustomerOpen(true)} className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Lägg till kund
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {customerLinks.length === 0 ? (
-                    <p className="text-muted-foreground">Inga kopplingar</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {customerLinks.map((link) => (
-                        <Link
-                          key={link.id}
-                          to={`/customers/${link.customer.id}`}
-                          className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-customer/10 flex items-center justify-center">
-                              {link.customer.customer_category === 'Skola' ? (
-                                <School className="h-5 w-5 text-school" />
-                              ) : (
-                                <Building2 className="h-5 w-5 text-customer" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium">{link.customer.name}</p>
-                              <CategoryBadge category={link.customer.customer_category} />
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <RelationshipBadge relationshipType={link.relationship_type} />
-                            {link.is_primary && <Badge variant="outline">Primär</Badge>}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              {/* Category Affinity Panel */}
+              <CategoryAffinityPanel contactId={id!} />
             </div>
+
+            {/* Customer Links */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-customer" />
+                      Kopplingar till kunder ({customerLinks.length})
+                    </CardTitle>
+                    <CardDescription>Kunder som denna kontakt är kopplad till</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setAddCustomerOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Lägg till kund
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {customerLinks.length === 0 ? (
+                  <p className="text-muted-foreground">Inga kopplingar</p>
+                ) : (
+                  <div className="space-y-3">
+                    {customerLinks.map((link) => (
+                      <Link
+                        key={link.id}
+                        to={`/customers/${link.customer.id}`}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-customer/10 flex items-center justify-center">
+                            {link.customer.customer_category === 'Skola' ? (
+                              <School className="h-5 w-5 text-school" />
+                            ) : (
+                              <Building2 className="h-5 w-5 text-customer" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{link.customer.name}</p>
+                            <CategoryBadge category={link.customer.customer_category} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RelationshipBadge relationshipType={link.relationship_type} />
+                          {link.is_primary && <Badge variant="outline">Primär</Badge>}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Teacher Assignments */}
             {contact.is_teacher && (
@@ -339,6 +355,14 @@ export default function ContactDetail() {
                 <OrdersTab contactId={id} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="communication">
+            <CommunicationTab contact={contact} onUpdate={fetchContactData} />
+          </TabsContent>
+
+          <TabsContent value="webactivity">
+            <WebActivityTab contact={contact} onUpdate={fetchContactData} />
           </TabsContent>
         </Tabs>
       </div>
