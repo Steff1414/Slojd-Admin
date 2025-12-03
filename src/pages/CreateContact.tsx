@@ -14,7 +14,7 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { ArrowLeft, Users, Save } from 'lucide-react';
 import { ContactType } from '@/types/database';
 
-const CONTACT_TYPES: ContactType[] = ['Member', 'Newsletter', 'Teacher', 'Buyer', 'Other'];
+const CONTACT_TYPES: ContactType[] = ['Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
 
 export default function CreateContact() {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ export default function CreateContact() {
     email: '',
     phone: '',
     voyado_id: '',
-    contact_type: 'Other' as ContactType,
+    contact_type: 'Övrig' as ContactType,
     is_teacher: false,
     notes: '',
   });

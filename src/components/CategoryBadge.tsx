@@ -48,11 +48,11 @@ interface ContactTypeBadgeProps {
 }
 
 const contactTypeVariants: Record<ContactType, 'contact' | 'teacher' | 'company' | 'customer'> = {
-  Member: 'customer',
-  Newsletter: 'contact',
-  Teacher: 'teacher',
-  Buyer: 'company',
-  Other: 'contact',
+  Medlem: 'customer',
+  Nyhetsbrev: 'contact',
+  Lärare: 'teacher',
+  Köpare: 'company',
+  Övrig: 'contact',
 };
 
 export function ContactTypeBadge({ contactType }: ContactTypeBadgeProps) {

@@ -61,7 +61,7 @@ export default function CreateTeacher() {
         email: form.email,
         phone: form.phone || null,
         voyado_id: form.voyado_id,
-        contact_type: 'Teacher',
+        contact_type: 'Lärare',
         is_teacher: true,
         notes: form.notes || null,
       })

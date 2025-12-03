@@ -547,7 +547,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      contact_type: "Member" | "Newsletter" | "Teacher" | "Buyer" | "Other"
+      contact_type: "Medlem" | "Nyhetsbrev" | "Lärare" | "Köpare" | "Övrig"
       customer_category:
         | "Privat"
         | "Personal"
@@ -693,7 +693,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      contact_type: ["Member", "Newsletter", "Teacher", "Buyer", "Other"],
+      contact_type: ["Medlem", "Nyhetsbrev", "Lärare", "Köpare", "Övrig"],
       customer_category: [
         "Privat",
         "Personal",
