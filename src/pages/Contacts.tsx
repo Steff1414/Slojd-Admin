@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { ContactTypeBadge } from '@/components/CategoryBadge';
 import { Contact, ContactType } from '@/types/database';
-import { Search, Users, GraduationCap, Mail, Phone, Plus, ArrowUpDown, ArrowUp, ArrowDown, Filter, X } from 'lucide-react';
+import { Search, Users, GraduationCap, Mail, Phone, Plus, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +26,7 @@ export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const { toast } = useToast();
   
   // Sorting state
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -166,6 +169,29 @@ export default function Contacts() {
     </th>
   );
 
+  const handleExportXLS = () => {
+    const exportData = filteredAndSortedContacts.map(c => ({
+      'Förnamn': c.first_name,
+      'Efternamn': c.last_name,
+      'E-post': c.email,
+      'Telefon': c.phone || '',
+      'Typ': c.contact_type,
+      'Voyado ID': c.voyado_id,
+      'Är lärare': c.is_teacher ? 'Ja' : 'Nej',
+      'Vill ha SMS': c.wants_sms ? 'Ja' : 'Nej',
+      'Vill ha nyhetsbrev': c.wants_newsletter ? 'Ja' : 'Nej',
+      'Vill ha personaliserade erbjudanden': c.wants_personalized_offers ? 'Ja' : 'Nej',
+      'Anteckningar': c.notes || '',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Kontakter');
+    XLSX.writeFile(wb, `kontakter_${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+    toast({ title: 'Export klar', description: `${exportData.length} kontakter exporterade` });
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -177,12 +203,18 @@ export default function Contacts() {
               Alla kontakter i systemet
             </p>
           </div>
-          <Link to="/contacts/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Ny kontakt
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleExportXLS} className="gap-2">
+              <Download className="h-4 w-4" />
+              Exportera XLS
             </Button>
-          </Link>
+            <Link to="/contacts/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Ny kontakt
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Search and Active Filters */}
