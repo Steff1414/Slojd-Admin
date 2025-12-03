@@ -19,6 +19,7 @@ import AuditLog from "./pages/AuditLog";
 import MergeContacts from "./pages/MergeContacts";
 import RelationsExplorer from "./pages/RelationsExplorer";
 import ApiDocs from "./pages/ApiDocs";
+import ImportCenter from "./pages/ImportCenter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ function AppRoutes() {
       <Route path="/merge-contacts" element={<ProtectedRoute><MergeContacts /></ProtectedRoute>} />
       <Route path="/relations" element={<ProtectedRoute><RelationsExplorer /></ProtectedRoute>} />
       <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
+      <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
