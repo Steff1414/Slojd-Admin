@@ -183,7 +183,7 @@ export default function ContactDetail() {
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <ContactTypeBadge contactType={contact.contact_type} />
-              {contact.is_teacher && <Badge variant="teacher">Lärare</Badge>}
+              {contact.is_teacher && contact.contact_type !== 'Lärare' && <Badge variant="teacher">Lärare</Badge>}
               {profile && <Badge variant="outline" className="gap-1"><KeyRound className="h-3 w-3" />Har inloggning</Badge>}
             </div>
           </div>
