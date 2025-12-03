@@ -15,6 +15,7 @@ import {
   History,
   Merge,
   FileText,
+  Upload,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ const navItems = [
   { href: '/contacts', label: 'Kontakter', icon: Users },
   { href: '/teachers', label: 'Lärare', icon: GraduationCap },
   { href: '/relations', label: 'Relationer', icon: Search },
+  { href: '/import', label: 'Import', icon: Upload },
   { href: '/audit-log', label: 'Ändringslogg', icon: History },
   { href: '/merge-contacts', label: 'Slå samman', icon: Merge },
   { href: '/api-docs', label: 'API Docs', icon: FileText },
