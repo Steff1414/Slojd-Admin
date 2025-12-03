@@ -18,6 +18,7 @@ import {
   Upload,
   Network,
   School,
+  Landmark,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/customers', label: 'Kunder', icon: Building2 },
   { href: '/schools', label: 'Skolor', icon: School },
+  { href: '/payers', label: 'Betalare', icon: Landmark },
   { href: '/contacts', label: 'Kontakter', icon: Users },
   { href: '/teachers', label: 'Lärare', icon: GraduationCap },
   { href: '/relations', label: 'Relationer', icon: Search },
