@@ -24,6 +24,7 @@ const CATEGORY_OPTIONS: { value: CustomerCategory; label: string }[] = [
   { value: 'Företag', label: 'Företag' },
   { value: 'Omsorg', label: 'Skola och Omsorg' },
   { value: 'Förening', label: 'Förening' },
+  { value: 'Kommun och Region', label: 'Kommun och Region' },
 ];
 const TYPE_GROUP_OPTIONS: CustomerTypeGroup[] = ['B2B', 'B2G'];
 
