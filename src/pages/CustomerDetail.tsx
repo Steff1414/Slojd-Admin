@@ -9,6 +9,8 @@ import { CategoryBadge, TypeGroupBadge, RelationshipBadge } from '@/components/C
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
 import { AddContactModal } from '@/components/AddContactModal';
+import { InlineEditCustomer } from '@/components/InlineEditCustomer';
+import { PayerGraph } from '@/components/PayerGraph';
 import { Customer, Contact, Account, Agreement, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
 import {
   Building2,
@@ -22,6 +24,7 @@ import {
   ShoppingCart,
   Plus,
   UserCircle,
+  Network,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -207,37 +210,19 @@ export default function CustomerDetail() {
               <ShoppingCart className="h-4 w-4" />
               Ordrar
             </TabsTrigger>
+            {isPayer && (
+              <TabsTrigger value="graph" className="gap-2">
+                <Network className="h-4 w-4" />
+                Graf
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="info" className="space-y-6">
             {/* Details Grid */}
             <div className="grid gap-6 lg:grid-cols-2">
-              {/* Basic Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-display text-lg">Grunduppgifter</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">BC Kundnummer</p>
-                      <p className="font-mono font-medium">{customer.bc_customer_number}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Voyado ID</p>
-                      <p className="font-mono text-sm">{customer.voyado_id || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Norce Code</p>
-                      <p className="font-mono text-sm">{customer.norce_code || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Sitoo Kundnummer</p>
-                      <p className="font-mono text-sm">{customer.sitoo_customer_number || '-'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Basic Info with Inline Edit */}
+              <InlineEditCustomer customer={customer} onUpdate={fetchCustomerData} />
 
               {/* Payer Info */}
               <Card>
@@ -486,6 +471,12 @@ export default function CustomerDetail() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isPayer && (
+            <TabsContent value="graph">
+              <PayerGraph customerId={id!} customerName={customer.name} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

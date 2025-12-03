@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { StatCard } from '@/components/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataQualityScan } from '@/components/DataQualityScan';
 import { Building2, Users, GraduationCap, School, CreditCard, UserCheck } from 'lucide-react';
 import { Customer, Contact } from '@/types/database';
 import { CategoryBadge, TypeGroupBadge } from '@/components/CategoryBadge';
@@ -247,6 +248,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Data Quality Scan */}
+        <DataQualityScan />
       </div>
     </AppLayout>
   );

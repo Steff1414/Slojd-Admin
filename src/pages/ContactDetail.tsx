@@ -10,6 +10,7 @@ import { CategoryBadge, ContactTypeBadge, RelationshipBadge } from '@/components
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
 import { AddSchoolModal } from '@/components/AddSchoolModal';
+import { InlineEditContact } from '@/components/InlineEditContact';
 import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
 import {
   Users,
@@ -174,48 +175,8 @@ export default function ContactDetail() {
           <TabsContent value="info" className="space-y-6">
             {/* Details Grid */}
             <div className="grid gap-6 lg:grid-cols-2">
-              {/* Basic Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-display text-lg">Kontaktuppgifter</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                      <Mail className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">E-post</p>
-                      <a href={`mailto:${contact.email}`} className="font-medium text-primary hover:underline">
-                        {contact.email}
-                      </a>
-                    </div>
-                  </div>
-                  {contact.phone && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                        <Phone className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Telefon</p>
-                        <a href={`tel:${contact.phone}`} className="font-medium text-primary hover:underline">
-                          {contact.phone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  <div className="pt-4 border-t border-border">
-                    <p className="text-sm text-muted-foreground mb-1">Voyado ID</p>
-                    <p className="font-mono text-sm">{contact.voyado_id}</p>
-                  </div>
-                  {contact.notes && (
-                    <div className="pt-4 border-t border-border">
-                      <p className="text-sm text-muted-foreground mb-1">Anteckningar</p>
-                      <p className="text-sm">{contact.notes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              {/* Basic Info with Inline Edit */}
+              <InlineEditContact contact={contact} onUpdate={fetchContactData} />
 
               {/* Customer Links */}
               <Card>
