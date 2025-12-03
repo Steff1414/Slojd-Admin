@@ -48,6 +48,7 @@ interface ContactTypeBadgeProps {
 }
 
 const contactTypeVariants: Record<ContactType, 'contact' | 'teacher' | 'company' | 'customer'> = {
+  Privatperson: 'customer',
   Medlem: 'customer',
   Nyhetsbrev: 'contact',
   Lärare: 'teacher',

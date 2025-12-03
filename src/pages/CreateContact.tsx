@@ -7,14 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { ArrowLeft, Users, Save } from 'lucide-react';
+import { ArrowLeft, Users, Save, Bell } from 'lucide-react';
 import { ContactType } from '@/types/database';
 
-const CONTACT_TYPES: ContactType[] = ['Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
+const CONTACT_TYPES: ContactType[] = ['Privatperson', 'Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
 
 export default function CreateContact() {
   const navigate = useNavigate();
@@ -27,8 +28,11 @@ export default function CreateContact() {
     email: '',
     phone: '',
     voyado_id: '',
-    contact_type: 'Övrig' as ContactType,
+    contact_type: 'Privatperson' as ContactType,
     is_teacher: false,
+    wants_sms: false,
+    wants_newsletter: false,
+    wants_personalized_offers: false,
     notes: '',
   });
 
@@ -50,6 +54,9 @@ export default function CreateContact() {
         voyado_id: form.voyado_id,
         contact_type: form.contact_type,
         is_teacher: form.is_teacher,
+        wants_sms: form.wants_sms,
+        wants_newsletter: form.wants_newsletter,
+        wants_personalized_offers: form.wants_personalized_offers,
         notes: form.notes || null,
       })
       .select()
@@ -160,6 +167,37 @@ export default function CreateContact() {
                   onCheckedChange={(checked) => setForm({ ...form, is_teacher: checked })}
                 />
                 <Label htmlFor="is_teacher">Är lärare</Label>
+              </div>
+
+              {/* Kommunikationspreferenser */}
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  <Label className="font-medium">Kommunikationspreferenser</Label>
+                </div>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={form.wants_sms}
+                      onCheckedChange={(checked) => setForm({ ...form, wants_sms: checked as boolean })}
+                    />
+                    <span className="text-sm">Vill få SMS med erbjudanden</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={form.wants_newsletter}
+                      onCheckedChange={(checked) => setForm({ ...form, wants_newsletter: checked as boolean })}
+                    />
+                    <span className="text-sm">Vill få e-post med nyhetsbrev</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={form.wants_personalized_offers}
+                      onCheckedChange={(checked) => setForm({ ...form, wants_personalized_offers: checked as boolean })}
+                    />
+                    <span className="text-sm">Vill få personaliserade erbjudanden baserat på köphistorik</span>
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-2">

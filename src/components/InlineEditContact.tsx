@@ -8,20 +8,24 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { Contact, ContactType } from '@/types/database';
-import { Pencil, Save, X, Mail, Phone } from 'lucide-react';
+import { Pencil, Save, X, Mail, Phone, Bell } from 'lucide-react';
 
-const CONTACT_TYPES: ContactType[] = ['Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
+const CONTACT_TYPES: ContactType[] = ['Privatperson', 'Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
 
 const contactSchema = z.object({
   first_name: z.string().trim().min(1, 'Förnamn krävs').max(100, 'Förnamn får vara max 100 tecken'),
   last_name: z.string().trim().min(1, 'Efternamn krävs').max(100, 'Efternamn får vara max 100 tecken'),
   email: z.string().trim().min(1, 'E-post krävs').email('Ogiltig e-postadress').max(255, 'E-post får vara max 255 tecken'),
   phone: z.string().max(50, 'Telefonnummer får vara max 50 tecken').optional().or(z.literal('')),
-  contact_type: z.enum(['Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig']),
+  contact_type: z.enum(['Privatperson', 'Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig']),
   is_teacher: z.boolean(),
+  wants_sms: z.boolean(),
+  wants_newsletter: z.boolean(),
+  wants_personalized_offers: z.boolean(),
   notes: z.string().max(2000, 'Anteckningar får vara max 2000 tecken').optional().or(z.literal('')),
 });
 
@@ -43,6 +47,9 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
     phone: contact.phone || '',
     contact_type: contact.contact_type,
     is_teacher: contact.is_teacher,
+    wants_sms: contact.wants_sms ?? false,
+    wants_newsletter: contact.wants_newsletter ?? false,
+    wants_personalized_offers: contact.wants_personalized_offers ?? false,
     notes: contact.notes || '',
   });
 
@@ -74,6 +81,9 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
         phone: result.data.phone || null,
         contact_type: result.data.contact_type,
         is_teacher: result.data.is_teacher,
+        wants_sms: result.data.wants_sms,
+        wants_newsletter: result.data.wants_newsletter,
+        wants_personalized_offers: result.data.wants_personalized_offers,
         notes: result.data.notes || null,
         updated_at: new Date().toISOString(),
       })
@@ -104,6 +114,9 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
       phone: contact.phone || '',
       contact_type: contact.contact_type,
       is_teacher: contact.is_teacher,
+      wants_sms: contact.wants_sms ?? false,
+      wants_newsletter: contact.wants_newsletter ?? false,
+      wants_personalized_offers: contact.wants_personalized_offers ?? false,
       notes: contact.notes || '',
     });
     setErrors({});
@@ -148,6 +161,33 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
           <div className="pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground mb-1">Voyado ID</p>
             <p className="font-mono text-sm">{contact.voyado_id}</p>
+          </div>
+          {/* Kommunikationspreferenser */}
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-medium">Kommunikationspreferenser</p>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Checkbox checked={contact.wants_sms ?? false} disabled />
+                <span className={contact.wants_sms ? '' : 'text-muted-foreground'}>
+                  Vill få SMS med erbjudanden
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={contact.wants_newsletter ?? false} disabled />
+                <span className={contact.wants_newsletter ? '' : 'text-muted-foreground'}>
+                  Vill få e-post med nyhetsbrev
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={contact.wants_personalized_offers ?? false} disabled />
+                <span className={contact.wants_personalized_offers ? '' : 'text-muted-foreground'}>
+                  Vill få personaliserade erbjudanden baserat på köphistorik
+                </span>
+              </div>
+            </div>
           </div>
           {contact.notes && (
             <div className="pt-4 border-t border-border">
@@ -251,6 +291,38 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
           />
           <Label htmlFor="is_teacher">Är lärare</Label>
         </div>
+        
+        {/* Kommunikationspreferenser */}
+        <div className="pt-4 border-t border-border">
+          <div className="flex items-center gap-2 mb-3">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            <Label className="font-medium">Kommunikationspreferenser</Label>
+          </div>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={form.wants_sms}
+                onCheckedChange={(checked) => setForm({ ...form, wants_sms: checked as boolean })}
+              />
+              <span className="text-sm">Vill få SMS med erbjudanden</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={form.wants_newsletter}
+                onCheckedChange={(checked) => setForm({ ...form, wants_newsletter: checked as boolean })}
+              />
+              <span className="text-sm">Vill få e-post med nyhetsbrev</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={form.wants_personalized_offers}
+                onCheckedChange={(checked) => setForm({ ...form, wants_personalized_offers: checked as boolean })}
+              />
+              <span className="text-sm">Vill få personaliserade erbjudanden baserat på köphistorik</span>
+            </label>
+          </div>
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="notes">Anteckningar</Label>
           <Textarea
