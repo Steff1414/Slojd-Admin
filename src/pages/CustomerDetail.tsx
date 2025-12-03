@@ -5,7 +5,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CategoryBadge, TypeGroupBadge, RelationshipBadge } from '@/components/CategoryBadge';
+import { CategoryBadge, TypeGroupBadge } from '@/components/CategoryBadge';
+import { ContactsListSection } from '@/components/ContactsListSection';
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
 import { AddContactModal } from '@/components/AddContactModal';
@@ -340,59 +341,12 @@ export default function CustomerDetail() {
             )}
 
             {/* Contacts */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="font-display text-lg flex items-center gap-2">
-                      <Users className="h-5 w-5 text-contact" />
-                      Kontakter ({contacts.length})
-                    </CardTitle>
-                    <CardDescription>Kontakter kopplade till denna kund</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => setAddContactOpen(true)} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Lägg till kontakt
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {contacts.length === 0 ? (
-                  <p className="text-muted-foreground">Inga kontakter kopplade</p>
-                ) : (
-                  <div className="space-y-3">
-                    {contacts.map((link) => (
-                      <Link
-                        key={link.id}
-                        to={`/contacts/${link.contact.id}`}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-contact/10 flex items-center justify-center">
-                            {link.contact.is_teacher ? (
-                              <GraduationCap className="h-5 w-5 text-teacher" />
-                            ) : (
-                              <Users className="h-5 w-5 text-contact" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {link.contact.first_name} {link.contact.last_name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{link.contact.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RelationshipBadge relationshipType={link.relationship_type} />
-                          {link.is_primary && <Badge variant="outline">Primär</Badge>}
-                          {link.contact.is_teacher && <Badge variant="teacher">Lärare</Badge>}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ContactsListSection
+              contacts={contacts}
+              customerId={id!}
+              onAddContact={() => setAddContactOpen(true)}
+              onUpdate={fetchCustomerData}
+            />
 
             {/* Teachers (if school) */}
             {customer.customer_category === 'Skola' && (
