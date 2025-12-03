@@ -230,7 +230,7 @@ export default function CustomerDetail() {
               <InlineEditCustomer customer={customer} onUpdate={fetchCustomerData} />
 
               {/* Payer Info - Only for B2B/B2G customers */}
-              {customer.customer_type_group !== 'B2C' ? (
+              {customer.customer_type_group !== 'B2C' && (
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -289,21 +289,6 @@ export default function CustomerDetail() {
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="font-display text-lg flex items-center gap-2">
-                      <Users className="h-5 w-5 text-contact" />
-                      Privatkund
-                    </CardTitle>
-                    <CardDescription>Privatpersoner hanterar sina egna betalningar</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-sm">
-                      Betalare är inte tillämpligt för privatkunder (B2C)
-                    </p>
                   </CardContent>
                 </Card>
               )}
