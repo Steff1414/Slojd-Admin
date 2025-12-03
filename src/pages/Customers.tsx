@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CategoryBadge, TypeGroupBadge } from '@/components/CategoryBadge';
 import { Customer, CustomerCategory, CustomerTypeGroup } from '@/types/database';
-import { Search, Building2, Filter, X } from 'lucide-react';
+import { Search, Building2, Filter, X, Plus } from 'lucide-react';
 
 const categories: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening'];
 const typeGroups: CustomerTypeGroup[] = ['B2C', 'B2B', 'B2G'];

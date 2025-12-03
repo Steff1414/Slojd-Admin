@@ -11,9 +11,14 @@ import {
   LogOut,
   Menu,
   X,
+  Search,
+  History,
+  Merge,
+  FileText,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { GlobalSearch } from '@/components/GlobalSearch';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -24,6 +29,10 @@ const navItems = [
   { href: '/customers', label: 'Kunder', icon: Building2 },
   { href: '/contacts', label: 'Kontakter', icon: Users },
   { href: '/teachers', label: 'Lärare', icon: GraduationCap },
+  { href: '/relations', label: 'Relationer', icon: Search },
+  { href: '/audit-log', label: 'Ändringslogg', icon: History },
+  { href: '/merge-contacts', label: 'Slå samman', icon: Merge },
+  { href: '/api-docs', label: 'API Docs', icon: FileText },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -67,6 +76,11 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
               <span className="font-display font-bold text-lg text-sidebar-foreground">CRM Demo</span>
             </Link>
+          </div>
+
+          {/* Search */}
+          <div className="px-3 py-3 border-b border-sidebar-border">
+            <GlobalSearch />
           </div>
 
           {/* Navigation */}
