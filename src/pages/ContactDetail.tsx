@@ -10,8 +10,10 @@ import { CategoryBadge, ContactTypeBadge, RelationshipBadge } from '@/components
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
 import { AddSchoolModal } from '@/components/AddSchoolModal';
+import { AddCustomerLinkModal } from '@/components/AddCustomerLinkModal';
 import { InlineEditContact } from '@/components/InlineEditContact';
-import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
+import { MergeHistory } from '@/components/MergeHistory';
+import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment, Profile } from '@/types/database';
 import {
   Users,
   ArrowLeft,
@@ -23,6 +25,8 @@ import {
   ExternalLink,
   ShoppingCart,
   Plus,
+  UserCircle,
+  KeyRound,
 } from 'lucide-react';
 
 export default function ContactDetail() {
@@ -30,10 +34,12 @@ export default function ContactDetail() {
   const [contact, setContact] = useState<Contact | null>(null);
   const [customerLinks, setCustomerLinks] = useState<(ContactCustomerLink & { customer: Customer })[]>([]);
   const [teacherAssignments, setTeacherAssignments] = useState<(TeacherSchoolAssignment & { school: Customer })[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [validationItems, setValidationItems] = useState<{ type: 'error' | 'warning' | 'info'; message: string }[]>([]);
   const [emailDuplicates, setEmailDuplicates] = useState(0);
   const [loading, setLoading] = useState(true);
   const [addSchoolOpen, setAddSchoolOpen] = useState(false);
+  const [addCustomerOpen, setAddCustomerOpen] = useState(false);
 
   const fetchContactData = async () => {
     if (!id) return;
@@ -75,6 +81,14 @@ export default function ContactDetail() {
           setTeacherAssignments(assignmentsData);
         }
 
+        // Fetch profile/user info
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('contact_id', id)
+          .maybeSingle();
+        setProfile(profileData as Profile | null);
+
         // Check for email duplicates
         const { count } = await supabase
           .from('contacts')
@@ -86,7 +100,7 @@ export default function ContactDetail() {
         // Compute validation items
         const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
         if ((count || 0) > 1) {
-          items.push({ type: 'warning', message: `E-postadressen används av ${count} kontakter` });
+          items.push({ type: 'info', message: `E-postadressen delas av ${count} kontakter (tillåtet)` });
         }
         if (contactData.is_teacher && assignmentsData.length === 0) {
           items.push({ type: 'warning', message: 'Lärare saknar skolkoppling' });
@@ -131,6 +145,9 @@ export default function ContactDetail() {
     );
   }
 
+  // Get school IDs for suggestions in AddCustomerLinkModal
+  const suggestedSchoolIds = teacherAssignments.map(a => a.school.id);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -141,6 +158,9 @@ export default function ContactDetail() {
             Tillbaka
           </Button>
         </Link>
+
+        {/* Merge History Banner (if merged) */}
+        <MergeHistory contactId={id!} />
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
@@ -158,6 +178,7 @@ export default function ContactDetail() {
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <ContactTypeBadge contactType={contact.contact_type} />
               {contact.is_teacher && <Badge variant="teacher">Lärare</Badge>}
+              {profile && <Badge variant="outline" className="gap-1"><KeyRound className="h-3 w-3" />Har inloggning</Badge>}
             </div>
           </div>
         </div>
@@ -181,11 +202,19 @@ export default function ContactDetail() {
               {/* Customer Links */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-display text-lg flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-customer" />
-                    Kopplingar till kunder ({customerLinks.length})
-                  </CardTitle>
-                  <CardDescription>Kunder som denna kontakt är kopplad till</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="font-display text-lg flex items-center gap-2">
+                        <Building2 className="h-5 w-5 text-customer" />
+                        Kopplingar till kunder ({customerLinks.length})
+                      </CardTitle>
+                      <CardDescription>Kunder som denna kontakt är kopplad till</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setAddCustomerOpen(true)} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Lägg till kund
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {customerLinks.length === 0 ? (
@@ -200,7 +229,11 @@ export default function ContactDetail() {
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-customer/10 flex items-center justify-center">
-                              <Building2 className="h-5 w-5 text-customer" />
+                              {link.customer.customer_category === 'Skola' ? (
+                                <School className="h-5 w-5 text-school" />
+                              ) : (
+                                <Building2 className="h-5 w-5 text-customer" />
+                              )}
                             </div>
                             <div>
                               <p className="font-medium">{link.customer.name}</p>
@@ -268,6 +301,37 @@ export default function ContactDetail() {
               </Card>
             )}
 
+            {/* User Account Info */}
+            {profile && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <UserCircle className="h-5 w-5 text-primary" />
+                    Användarkonto
+                  </CardTitle>
+                  <CardDescription>Inloggningsinformation för denna kontakt</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <KeyRound className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{profile.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {profile.is_active ? 'Aktivt konto' : 'Inaktivt konto'}
+                      </p>
+                    </div>
+                    {profile.is_active ? (
+                      <Badge variant="success">Aktiv</Badge>
+                    ) : (
+                      <Badge variant="destructive">Inaktiv</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Validation Pane - at bottom */}
             <ValidationPane items={validationItems} title="Datavalidering" />
           </TabsContent>
@@ -298,6 +362,16 @@ export default function ContactDetail() {
           onSuccess={fetchContactData}
         />
       )}
+
+      {/* Add Customer Link Modal */}
+      <AddCustomerLinkModal
+        open={addCustomerOpen}
+        onOpenChange={setAddCustomerOpen}
+        contactId={id!}
+        isTeacher={contact.is_teacher}
+        suggestedSchoolIds={suggestedSchoolIds}
+        onSuccess={fetchContactData}
+      />
     </AppLayout>
   );
 }

@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CategoryBadge } from '@/components/CategoryBadge';
-import { Search, Building2, Users, GraduationCap, School, CreditCard, ArrowRight, ExternalLink } from 'lucide-react';
+import { Search, Building2, Users, GraduationCap, School, CreditCard, ArrowRight, ExternalLink, List } from 'lucide-react';
 import { Customer, Contact } from '@/types/database';
 
 interface SearchResult {
@@ -15,6 +16,8 @@ interface SearchResult {
   name: string;
   category?: string;
   isTeacher?: boolean;
+  bcNumber?: string;
+  voyadoId?: string;
 }
 
 interface Relation {
@@ -28,11 +31,15 @@ interface Relation {
 export default function RelationsExplorer() {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [fullResults, setFullResults] = useState<SearchResult[]>([]);
+  const [showFullResults, setShowFullResults] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [relations, setRelations] = useState<Relation[]>([]);
   const [secondDegree, setSecondDegree] = useState<Relation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
 
+  // Typeahead search
   useEffect(() => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -45,7 +52,7 @@ export default function RelationsExplorer() {
 
       const { data: customers } = await supabase
         .from('customers')
-        .select('id, name, customer_category')
+        .select('id, name, customer_category, bc_customer_number')
         .ilike('name', searchTerm)
         .limit(5);
 
@@ -55,12 +62,13 @@ export default function RelationsExplorer() {
           type: 'customer',
           name: c.name,
           category: c.customer_category,
+          bcNumber: c.bc_customer_number,
         });
       });
 
       const { data: contacts } = await supabase
         .from('contacts')
-        .select('id, first_name, last_name, is_teacher')
+        .select('id, first_name, last_name, is_teacher, voyado_id')
         .is('merged_into_id', null)
         .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm}`)
         .limit(5);
@@ -71,6 +79,7 @@ export default function RelationsExplorer() {
           type: 'contact',
           name: `${c.first_name} ${c.last_name}`,
           isTeacher: c.is_teacher || false,
+          voyadoId: c.voyado_id,
         });
       });
 
@@ -81,10 +90,69 @@ export default function RelationsExplorer() {
     return () => clearTimeout(debounce);
   }, [query]);
 
+  // Full search on Enter
+  const performFullSearch = async () => {
+    if (query.length < 2) return;
+    
+    setSearching(true);
+    setShowFullResults(true);
+    const searchTerm = `%${query}%`;
+    const results: SearchResult[] = [];
+
+    // Search customers by name, BC number
+    const { data: customers } = await supabase
+      .from('customers')
+      .select('id, name, customer_category, bc_customer_number, voyado_id')
+      .or(`name.ilike.${searchTerm},bc_customer_number.ilike.${searchTerm}`)
+      .limit(20);
+
+    customers?.forEach((c) => {
+      results.push({
+        id: c.id,
+        type: 'customer',
+        name: c.name,
+        category: c.customer_category,
+        bcNumber: c.bc_customer_number,
+        voyadoId: c.voyado_id || undefined,
+      });
+    });
+
+    // Search contacts by name, email, voyado_id
+    const { data: contacts } = await supabase
+      .from('contacts')
+      .select('id, first_name, last_name, is_teacher, voyado_id, email')
+      .is('merged_into_id', null)
+      .or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},email.ilike.${searchTerm},voyado_id.ilike.${searchTerm}`)
+      .limit(20);
+
+    contacts?.forEach((c) => {
+      results.push({
+        id: c.id,
+        type: 'contact',
+        name: `${c.first_name} ${c.last_name}`,
+        isTeacher: c.is_teacher || false,
+        voyadoId: c.voyado_id,
+      });
+    });
+
+    setFullResults(results);
+    setSearchResults([]);
+    setSearching(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      performFullSearch();
+    }
+  };
+
   const selectEntity = async (result: SearchResult) => {
     setSelected(result);
     setQuery('');
     setSearchResults([]);
+    setFullResults([]);
+    setShowFullResults(false);
     setLoading(true);
     setRelations([]);
     setSecondDegree([]);
@@ -241,6 +309,24 @@ export default function RelationsExplorer() {
     return `/contacts/${relation.id}`;
   };
 
+  const getResultIcon = (result: SearchResult) => {
+    if (result.type === 'customer') {
+      if (result.category === 'Skola') return <School className="h-5 w-5 text-school" />;
+      return <Building2 className="h-5 w-5 text-customer" />;
+    }
+    if (result.isTeacher) return <GraduationCap className="h-5 w-5 text-teacher" />;
+    return <Users className="h-5 w-5 text-contact" />;
+  };
+
+  const getResultTypeLabel = (result: SearchResult) => {
+    if (result.type === 'customer') {
+      if (result.category === 'Skola') return 'Skola';
+      return 'Kund';
+    }
+    if (result.isTeacher) return 'Lärare';
+    return 'Kontakt';
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -257,53 +343,92 @@ export default function RelationsExplorer() {
         <Card>
           <CardHeader>
             <CardTitle>Sök entitet</CardTitle>
-            <CardDescription>Ange namn på kund, kontakt, lärare eller skola</CardDescription>
+            <CardDescription>
+              Ange namn på kund, kontakt, lärare eller skola. Tryck Enter för fullständig sökning.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Sök..."
-                className="pl-9"
-              />
-              {searchResults.length > 0 && (
-                <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-10 overflow-hidden">
-                  {searchResults.map((result) => (
-                    <button
-                      key={result.id}
-                      onClick={() => selectEntity(result)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                    >
-                      {result.type === 'customer' ? (
-                        result.category === 'Skola' ? <School className="h-5 w-5 text-school" /> : <Building2 className="h-5 w-5 text-customer" />
-                      ) : result.isTeacher ? (
-                        <GraduationCap className="h-5 w-5 text-teacher" />
-                      ) : (
-                        <Users className="h-5 w-5 text-contact" />
-                      )}
-                      <span className="font-medium">{result.name}</span>
-                      {result.category && <Badge variant="outline" className="ml-auto">{result.category}</Badge>}
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={query}
+                  onChange={(e) => { setQuery(e.target.value); setShowFullResults(false); }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Sök..."
+                  className="pl-9"
+                />
+                {searchResults.length > 0 && !showFullResults && (
+                  <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-10 overflow-hidden">
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.id}
+                        onClick={() => selectEntity(result)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                      >
+                        {getResultIcon(result)}
+                        <span className="font-medium">{result.name}</span>
+                        {result.category && <Badge variant="outline" className="ml-auto">{result.category}</Badge>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Button onClick={performFullSearch} disabled={searching || query.length < 2}>
+                <List className="h-4 w-4 mr-2" />
+                {searching ? 'Söker...' : 'Visa alla'}
+              </Button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Full search results */}
+        {showFullResults && fullResults.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Sökresultat ({fullResults.length})</CardTitle>
+              <CardDescription>Klicka på en rad för att visa relationer</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {fullResults.map((result) => (
+                  <button
+                    key={result.id}
+                    onClick={() => selectEntity(result)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                  >
+                    {getResultIcon(result)}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{result.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {result.bcNumber || result.voyadoId}
+                      </p>
+                    </div>
+                    <Badge variant="outline">{getResultTypeLabel(result)}</Badge>
+                    {result.category && <CategoryBadge category={result.category as any} />}
+                    <Button variant="ghost" size="sm">
+                      Välj
+                    </Button>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showFullResults && fullResults.length === 0 && !searching && (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Inga resultat hittades för "{query}"
+            </CardContent>
+          </Card>
+        )}
 
         {selected && (
           <Card>
             <CardHeader>
               <div className="flex items-center gap-4">
-                {selected.type === 'customer' ? (
-                  selected.category === 'Skola' ? <School className="h-8 w-8 text-school" /> : <Building2 className="h-8 w-8 text-customer" />
-                ) : selected.isTeacher ? (
-                  <GraduationCap className="h-8 w-8 text-teacher" />
-                ) : (
-                  <Users className="h-8 w-8 text-contact" />
-                )}
+                {getResultIcon(selected)}
                 <div>
                   <CardTitle>{selected.name}</CardTitle>
                   <CardDescription>
