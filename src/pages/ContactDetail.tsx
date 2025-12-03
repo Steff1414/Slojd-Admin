@@ -1,0 +1,262 @@
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CategoryBadge, ContactTypeBadge, RelationshipBadge } from '@/components/CategoryBadge';
+import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
+import {
+  Users,
+  ArrowLeft,
+  Mail,
+  Phone,
+  GraduationCap,
+  Building2,
+  School,
+  ExternalLink,
+  FileText,
+} from 'lucide-react';
+
+export default function ContactDetail() {
+  const { id } = useParams<{ id: string }>();
+  const [contact, setContact] = useState<Contact | null>(null);
+  const [customerLinks, setCustomerLinks] = useState<(ContactCustomerLink & { customer: Customer })[]>([]);
+  const [teacherAssignments, setTeacherAssignments] = useState<(TeacherSchoolAssignment & { school: Customer })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchContactData() {
+      if (!id) return;
+      setLoading(true);
+
+      try {
+        // Fetch contact
+        const { data: contactData } = await supabase
+          .from('contacts')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (contactData) {
+          setContact(contactData as Contact);
+
+          // Fetch customer links
+          const { data: linksData } = await supabase
+            .from('contact_customer_links')
+            .select(`
+              *,
+              customer:customer_id (*)
+            `)
+            .eq('contact_id', id);
+          setCustomerLinks((linksData || []) as (ContactCustomerLink & { customer: Customer })[]);
+
+          // Fetch teacher assignments if teacher
+          if (contactData.is_teacher) {
+            const { data: assignmentsData } = await supabase
+              .from('teacher_school_assignments')
+              .select(`
+                *,
+                school:school_customer_id (*)
+              `)
+              .eq('teacher_contact_id', id)
+              .eq('is_active', true);
+            setTeacherAssignments((assignmentsData || []) as (TeacherSchoolAssignment & { school: Customer })[]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching contact:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchContactData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 w-64 bg-muted rounded" />
+          <div className="h-48 bg-muted rounded-xl" />
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!contact) {
+    return (
+      <AppLayout>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Kontakten hittades inte</p>
+          <Link to="/contacts" className="text-primary hover:underline mt-2 inline-block">
+            Tillbaka till kontaktlistan
+          </Link>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Back button */}
+        <Link to={contact.is_teacher ? '/teachers' : '/contacts'}>
+          <Button variant="ghost" size="sm" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Tillbaka
+          </Button>
+        </Link>
+
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+          <div className="w-16 h-16 rounded-full bg-contact/10 flex items-center justify-center flex-shrink-0">
+            {contact.is_teacher ? (
+              <GraduationCap className="h-8 w-8 text-teacher" />
+            ) : (
+              <Users className="h-8 w-8 text-contact" />
+            )}
+          </div>
+          <div className="flex-1">
+            <h1 className="font-display text-3xl font-bold text-foreground">
+              {contact.first_name} {contact.last_name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <ContactTypeBadge contactType={contact.contact_type} />
+              {contact.is_teacher && <Badge variant="teacher">Lärare</Badge>}
+            </div>
+          </div>
+        </div>
+
+        {/* Details Grid */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Basic Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-lg">Kontaktuppgifter</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">E-post</p>
+                  <a href={`mailto:${contact.email}`} className="font-medium text-primary hover:underline">
+                    {contact.email}
+                  </a>
+                </div>
+              </div>
+              {contact.phone && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Telefon</p>
+                    <a href={`tel:${contact.phone}`} className="font-medium text-primary hover:underline">
+                      {contact.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+              <div className="pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground mb-1">Voyado ID</p>
+                <p className="font-mono text-sm">{contact.voyado_id}</p>
+              </div>
+              {contact.notes && (
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground mb-1">Anteckningar</p>
+                  <p className="text-sm">{contact.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Customer Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-lg flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-customer" />
+                Kopplingar till kunder ({customerLinks.length})
+              </CardTitle>
+              <CardDescription>Kunder som denna kontakt är kopplad till</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {customerLinks.length === 0 ? (
+                <p className="text-muted-foreground">Inga kopplingar</p>
+              ) : (
+                <div className="space-y-3">
+                  {customerLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      to={`/customers/${link.customer.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-customer/10 flex items-center justify-center">
+                          <Building2 className="h-5 w-5 text-customer" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{link.customer.name}</p>
+                          <CategoryBadge category={link.customer.customer_category} />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RelationshipBadge relationshipType={link.relationship_type} />
+                        {link.is_primary && <Badge variant="outline">Primär</Badge>}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Teacher Assignments */}
+        {contact.is_teacher && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display text-lg flex items-center gap-2">
+                <School className="h-5 w-5 text-school" />
+                Undervisar vid ({teacherAssignments.length})
+              </CardTitle>
+              <CardDescription>Skolor där denna lärare undervisar</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {teacherAssignments.length === 0 ? (
+                <p className="text-muted-foreground">Inga skolkopplingar</p>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {teacherAssignments.map((assignment) => (
+                    <Link
+                      key={assignment.id}
+                      to={`/customers/${assignment.school.id}`}
+                      className="flex items-center justify-between p-4 rounded-lg bg-school/5 hover:bg-school/10 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-school/10 flex items-center justify-center">
+                          <School className="h-6 w-6 text-school" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{assignment.school.name}</p>
+                          {assignment.role && (
+                            <p className="text-sm text-muted-foreground">{assignment.role}</p>
+                          )}
+                        </div>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </AppLayout>
+  );
+}
