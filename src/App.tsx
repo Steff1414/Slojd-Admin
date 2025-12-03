@@ -21,6 +21,7 @@ import RelationsExplorer from "./pages/RelationsExplorer";
 import ApiDocs from "./pages/ApiDocs";
 import ImportCenter from "./pages/ImportCenter";
 import OrganisationGraph from "./pages/OrganisationGraph";
+import Schools from "./pages/Schools";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
       <Route path="/customers/new" element={<ProtectedRoute><CreateCustomer /></ProtectedRoute>} />
       <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetail /></ProtectedRoute>} />
+      <Route path="/schools" element={<ProtectedRoute><Schools /></ProtectedRoute>} />
       <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
       <Route path="/contacts/new" element={<ProtectedRoute><CreateContact /></ProtectedRoute>} />
       <Route path="/contacts/:id" element={<ProtectedRoute><ContactDetail /></ProtectedRoute>} />
