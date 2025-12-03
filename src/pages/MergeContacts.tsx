@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,17 +12,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Search, Merge, ShieldAlert, Users, AlertTriangle } from 'lucide-react';
+import { Search, Merge, ShieldAlert, Users, AlertTriangle, ExternalLink, GraduationCap } from 'lucide-react';
 import { Contact } from '@/types/database';
 
 export default function MergeContacts() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const { logAction } = useAuditLog();
-  const [searchEmail, setSearchEmail] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [merging, setMerging] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [winnerFields, setWinnerFields] = useState({
     name: '',
     phone: '',
@@ -29,15 +31,23 @@ export default function MergeContacts() {
   });
 
   const searchContacts = async () => {
-    if (!searchEmail) return;
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    
+    const searchTerm = `%${searchQuery}%`;
+    
+    // Search across multiple fields
     const { data } = await supabase
       .from('contacts')
       .select('*')
-      .ilike('email', `%${searchEmail}%`)
       .is('merged_into_id', null)
-      .order('last_name');
+      .or(`email.ilike.${searchTerm},first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},voyado_id.ilike.${searchTerm},phone.ilike.${searchTerm},notes.ilike.${searchTerm}`)
+      .order('last_name')
+      .limit(50);
+    
     setContacts((data || []) as Contact[]);
     setSelectedIds([]);
+    setSearching(false);
   };
 
   const toggleSelection = (id: string) => {
@@ -154,23 +164,25 @@ export default function MergeContacts() {
         <Card>
           <CardHeader>
             <CardTitle>Sök dubbletter</CardTitle>
-            <CardDescription>Sök på e-post för att hitta dubbletter</CardDescription>
+            <CardDescription>
+              Sök på e-post, namn, telefon, Voyado ID eller anteckningar
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  value={searchEmail}
-                  onChange={(e) => setSearchEmail(e.target.value)}
-                  placeholder="Sök på e-postadress..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Sök på e-post, namn, telefon, Voyado ID..."
                   className="pl-9"
                   onKeyDown={(e) => e.key === 'Enter' && searchContacts()}
                 />
               </div>
-              <Button onClick={searchContacts}>
+              <Button onClick={searchContacts} disabled={searching}>
                 <Search className="h-4 w-4 mr-2" />
-                Sök
+                {searching ? 'Söker...' : 'Sök'}
               </Button>
             </div>
           </CardContent>
@@ -195,18 +207,31 @@ export default function MergeContacts() {
                     onCheckedChange={() => toggleSelection(contact.id)}
                   />
                   <div className="w-10 h-10 rounded-full bg-contact/10 flex items-center justify-center">
-                    <Users className="h-5 w-5 text-contact" />
+                    {contact.is_teacher ? (
+                      <GraduationCap className="h-5 w-5 text-teacher" />
+                    ) : (
+                      <Users className="h-5 w-5 text-contact" />
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">{contact.first_name} {contact.last_name}</p>
                     <p className="text-sm text-muted-foreground">{contact.email}</p>
-                    <div className="flex gap-2 mt-1">
+                    <div className="flex flex-wrap gap-2 mt-1">
                       {contact.phone && <Badge variant="outline">{contact.phone}</Badge>}
                       <Badge variant="secondary">{contact.contact_type}</Badge>
                       {contact.is_teacher && <Badge variant="teacher">Lärare</Badge>}
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground font-mono">{contact.voyado_id}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground font-mono">{contact.voyado_id}</p>
+                    <Link 
+                      to={`/contacts/${contact.id}`}
+                      className="p-2 hover:bg-muted rounded-lg transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  </div>
                 </div>
               ))}
             </CardContent>

@@ -9,6 +9,8 @@ import { CategoryBadge, TypeGroupBadge, RelationshipBadge } from '@/components/C
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
 import { AddContactModal } from '@/components/AddContactModal';
+import { AddPayerModal } from '@/components/AddPayerModal';
+import { AddAgreementModal } from '@/components/AddAgreementModal';
 import { InlineEditCustomer } from '@/components/InlineEditCustomer';
 import { PayerGraph } from '@/components/PayerGraph';
 import { Customer, Contact, Account, Agreement, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
@@ -42,6 +44,8 @@ export default function CustomerDetail() {
   const [validationItems, setValidationItems] = useState<{ type: 'error' | 'warning' | 'info'; message: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [addPayerOpen, setAddPayerOpen] = useState(false);
+  const [addAgreementOpen, setAddAgreementOpen] = useState(false);
 
   const fetchCustomerData = async () => {
     if (!id) return;
@@ -140,6 +144,7 @@ export default function CustomerDetail() {
   }, [id]);
 
   const isPayer = paysFor.length > 0;
+  const needsPayer = customer && ['Skola', 'Omsorg', 'Förening'].includes(customer.customer_category) && !customer.payer_customer_id;
 
   if (loading) {
     return (
@@ -227,11 +232,21 @@ export default function CustomerDetail() {
               {/* Payer Info */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-display text-lg flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-payer" />
-                    Betalare
-                  </CardTitle>
-                  <CardDescription>Vem som betalar för denna kund</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="font-display text-lg flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-payer" />
+                        Betalare
+                      </CardTitle>
+                      <CardDescription>Vem som betalar för denna kund</CardDescription>
+                    </div>
+                    {needsPayer && (
+                      <Button variant="outline" size="sm" onClick={() => setAddPayerOpen(true)} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Lägg till betalare
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {customer.payer ? (
@@ -250,6 +265,14 @@ export default function CustomerDetail() {
                       </div>
                       <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
                     </Link>
+                  ) : needsPayer ? (
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground mb-3">Ingen betalare angiven</p>
+                      <Button variant="outline" onClick={() => setAddPayerOpen(true)} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Lägg till betalare
+                      </Button>
+                    </div>
                   ) : (
                     <p className="text-muted-foreground">Ingen extern betalare</p>
                   )}
@@ -354,7 +377,11 @@ export default function CustomerDetail() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-contact/10 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-contact" />
+                            {link.contact.is_teacher ? (
+                              <GraduationCap className="h-5 w-5 text-teacher" />
+                            ) : (
+                              <Users className="h-5 w-5 text-contact" />
+                            )}
                           </div>
                           <div>
                             <p className="font-medium">
@@ -366,6 +393,7 @@ export default function CustomerDetail() {
                         <div className="flex items-center gap-2">
                           <RelationshipBadge relationshipType={link.relationship_type} />
                           {link.is_primary && <Badge variant="outline">Primär</Badge>}
+                          {link.contact.is_teacher && <Badge variant="teacher">Lärare</Badge>}
                         </div>
                       </Link>
                     ))}
@@ -419,17 +447,31 @@ export default function CustomerDetail() {
               </Card>
             )}
 
-            {/* Accounts */}
+            {/* Accounts & Agreements */}
             <Card>
               <CardHeader>
-                <CardTitle className="font-display text-lg flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  Konton & Avtal ({accounts.length})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Konton & Avtal ({accounts.length})
+                    </CardTitle>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setAddAgreementOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Lägg till avtal
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {accounts.length === 0 ? (
-                  <p className="text-muted-foreground">Inga konton</p>
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground mb-3">Inga konton</p>
+                    <Button variant="outline" onClick={() => setAddAgreementOpen(true)} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Lägg till avtal
+                    </Button>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {accounts.map((account) => (
@@ -486,6 +528,23 @@ export default function CustomerDetail() {
         onOpenChange={setAddContactOpen}
         customerId={id!}
         customerCategory={customer.customer_category}
+        onSuccess={fetchCustomerData}
+      />
+
+      {/* Add Payer Modal */}
+      <AddPayerModal
+        open={addPayerOpen}
+        onOpenChange={setAddPayerOpen}
+        customerId={id!}
+        onSuccess={fetchCustomerData}
+      />
+
+      {/* Add Agreement Modal */}
+      <AddAgreementModal
+        open={addAgreementOpen}
+        onOpenChange={setAddAgreementOpen}
+        customerId={id!}
+        customerName={customer.name}
         onSuccess={fetchCustomerData}
       />
     </AppLayout>
