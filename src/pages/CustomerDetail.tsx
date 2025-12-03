@@ -497,7 +497,7 @@ export default function CustomerDetail() {
                 <CardDescription>Orderhistorik för denna kund</CardDescription>
               </CardHeader>
               <CardContent>
-                <OrdersTab customerId={id} />
+                <OrdersTab customerId={id} showBuyer={customer.customer_type_group !== 'B2C'} />
               </CardContent>
             </Card>
           </TabsContent>

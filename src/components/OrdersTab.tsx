@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, User } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -13,16 +14,17 @@ interface Order {
   status: string | null;
   created_at: string;
   customer?: { name: string };
-  buyer_contact?: { first_name: string; last_name: string };
+  buyer_contact?: { id: string; first_name: string; last_name: string } | null;
 }
 
 interface OrdersTabProps {
   customerId?: string;
   contactId?: string;
   accountId?: string;
+  showBuyer?: boolean;
 }
 
-export function OrdersTab({ customerId, contactId, accountId }: OrdersTabProps) {
+export function OrdersTab({ customerId, contactId, accountId, showBuyer = false }: OrdersTabProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export function OrdersTab({ customerId, contactId, accountId }: OrdersTabProps) 
         .select(`
           *,
           customer:customer_id (name),
-          buyer_contact:buyer_contact_id (first_name, last_name)
+          buyer_contact:buyer_contact_id (id, first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -98,6 +100,15 @@ export function OrdersTab({ customerId, contactId, accountId }: OrdersTabProps) 
               <p className="text-sm text-muted-foreground">
                 {format(new Date(order.created_at), 'PPP', { locale: sv })}
               </p>
+              {showBuyer && order.buyer_contact && (
+                <Link 
+                  to={`/contacts/${order.buyer_contact.id}`}
+                  className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
+                >
+                  <User className="h-3 w-3" />
+                  Köpare: {order.buyer_contact.first_name} {order.buyer_contact.last_name}
+                </Link>
+              )}
             </div>
           </div>
           <div className="text-right">
