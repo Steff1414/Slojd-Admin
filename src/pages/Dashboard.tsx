@@ -6,6 +6,8 @@ import { StatCard } from '@/components/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataQualityScan } from '@/components/DataQualityScan';
+import { RecentMessagesCard } from '@/components/dashboard/RecentMessagesCard';
+import { BrowsingStatsCard } from '@/components/dashboard/BrowsingStatsCard';
 import { Building2, Users, GraduationCap, School, CreditCard, UserCheck } from 'lucide-react';
 import { Customer, Contact } from '@/types/database';
 import { CategoryBadge, TypeGroupBadge } from '@/components/CategoryBadge';
@@ -247,6 +249,12 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Communication & Browsing Stats */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <RecentMessagesCard />
+          <BrowsingStatsCard />
         </div>
 
         {/* Data Quality Scan */}
