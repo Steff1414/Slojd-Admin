@@ -557,6 +557,7 @@ export type Database = {
         | "Skola"
         | "Omsorg"
         | "Förening"
+        | "Kommun och Region"
       customer_type_group: "B2C" | "B2B" | "B2G"
       relationship_type:
         | "TeacherAtSchool"
@@ -702,6 +703,7 @@ export const Constants = {
         "Skola",
         "Omsorg",
         "Förening",
+        "Kommun och Region",
       ],
       customer_type_group: ["B2C", "B2B", "B2G"],
       relationship_type: [

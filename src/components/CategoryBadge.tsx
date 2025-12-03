@@ -14,6 +14,7 @@ const categoryVariants: Record<CustomerCategory, 'customer' | 'school' | 'compan
   Skola: 'school',
   Omsorg: 'payer',
   Förening: 'contact',
+  'Kommun och Region': 'payer',
 };
 
 export function CategoryBadge({ category }: CategoryBadgeProps) {

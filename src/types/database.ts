@@ -1,4 +1,4 @@
-export type CustomerCategory = 'Privat' | 'Personal' | 'Företag' | 'ÅF' | 'UF' | 'Skola' | 'Omsorg' | 'Förening';
+export type CustomerCategory = 'Privat' | 'Personal' | 'Företag' | 'ÅF' | 'UF' | 'Skola' | 'Omsorg' | 'Förening' | 'Kommun och Region';
 export type CustomerTypeGroup = 'B2C' | 'B2B' | 'B2G';
 export type ContactType = 'Member' | 'Newsletter' | 'Teacher' | 'Buyer' | 'Other';
 export type RelationshipType = 'TeacherAtSchool' | 'BuyerAtCompany' | 'PrimaryContact' | 'Employee' | 'Other';
