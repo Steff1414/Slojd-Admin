@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,16 @@ import { Pencil, Save, X } from 'lucide-react';
 const CATEGORIES: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening'];
 const TYPE_GROUPS: CustomerTypeGroup[] = ['B2C', 'B2B', 'B2G'];
 
+const customerSchema = z.object({
+  name: z.string().trim().min(1, 'Namn krävs').max(255, 'Namn får vara max 255 tecken'),
+  customer_category: z.enum(['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening']),
+  customer_type_group: z.enum(['B2C', 'B2B', 'B2G']),
+  is_active: z.boolean(),
+  voyado_id: z.string().max(100, 'Voyado ID får vara max 100 tecken').optional().or(z.literal('')),
+  norce_code: z.string().max(100, 'Norce Code får vara max 100 tecken').optional().or(z.literal('')),
+  sitoo_customer_number: z.string().max(100, 'Sitoo nummer får vara max 100 tecken').optional().or(z.literal('')),
+});
+
 interface InlineEditCustomerProps {
   customer: Customer;
   onUpdate: () => void;
@@ -24,6 +35,7 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
   const { logAction } = useAuditLog();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: customer.name,
     customer_category: customer.customer_category,
@@ -35,8 +47,18 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
   });
 
   const handleSave = async () => {
-    if (!form.name.trim()) {
-      toast({ title: 'Namn krävs', variant: 'destructive' });
+    setErrors({});
+    
+    const result = customerSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast({ title: 'Valideringsfel', description: 'Kontrollera de markerade fälten', variant: 'destructive' });
       return;
     }
 
@@ -46,13 +68,13 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
     const { error } = await supabase
       .from('customers')
       .update({
-        name: form.name.trim(),
-        customer_category: form.customer_category,
-        customer_type_group: form.customer_type_group,
-        is_active: form.is_active,
-        voyado_id: form.voyado_id || null,
-        norce_code: form.norce_code || null,
-        sitoo_customer_number: form.sitoo_customer_number || null,
+        name: result.data.name,
+        customer_category: result.data.customer_category,
+        customer_type_group: result.data.customer_type_group,
+        is_active: result.data.is_active,
+        voyado_id: result.data.voyado_id || null,
+        norce_code: result.data.norce_code || null,
+        sitoo_customer_number: result.data.sitoo_customer_number || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', customer.id);
@@ -65,7 +87,7 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
 
     await logAction('customer', customer.id, 'update', beforeSnapshot as any, {
       ...beforeSnapshot,
-      ...form,
+      ...result.data,
     } as any);
 
     toast({ title: 'Kunduppgifter uppdaterade' });
@@ -84,6 +106,7 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
       norce_code: customer.norce_code || '',
       sitoo_customer_number: customer.sitoo_customer_number || '',
     });
+    setErrors({});
     setEditing(false);
   };
 
@@ -144,7 +167,10 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
               id="name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className={errors.name ? 'border-destructive' : ''}
+              maxLength={255}
             />
+            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
           </div>
           <div className="space-y-2">
             <Label>BC Kundnummer (skrivskyddat)</Label>
@@ -188,7 +214,10 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
               id="voyado_id"
               value={form.voyado_id}
               onChange={(e) => setForm({ ...form, voyado_id: e.target.value })}
+              className={errors.voyado_id ? 'border-destructive' : ''}
+              maxLength={100}
             />
+            {errors.voyado_id && <p className="text-sm text-destructive">{errors.voyado_id}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="norce_code">Norce Code</Label>
@@ -196,7 +225,10 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
               id="norce_code"
               value={form.norce_code}
               onChange={(e) => setForm({ ...form, norce_code: e.target.value })}
+              className={errors.norce_code ? 'border-destructive' : ''}
+              maxLength={100}
             />
+            {errors.norce_code && <p className="text-sm text-destructive">{errors.norce_code}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="sitoo">Sitoo Kundnummer</Label>
@@ -204,7 +236,10 @@ export function InlineEditCustomer({ customer, onUpdate }: InlineEditCustomerPro
               id="sitoo"
               value={form.sitoo_customer_number}
               onChange={(e) => setForm({ ...form, sitoo_customer_number: e.target.value })}
+              className={errors.sitoo_customer_number ? 'border-destructive' : ''}
+              maxLength={100}
             />
+            {errors.sitoo_customer_number && <p className="text-sm text-destructive">{errors.sitoo_customer_number}</p>}
           </div>
           <div className="flex items-center gap-3 pt-6">
             <Switch

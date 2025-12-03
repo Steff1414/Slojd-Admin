@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,16 @@ import { Pencil, Save, X, Mail, Phone } from 'lucide-react';
 
 const CONTACT_TYPES: ContactType[] = ['Member', 'Newsletter', 'Teacher', 'Buyer', 'Other'];
 
+const contactSchema = z.object({
+  first_name: z.string().trim().min(1, 'Förnamn krävs').max(100, 'Förnamn får vara max 100 tecken'),
+  last_name: z.string().trim().min(1, 'Efternamn krävs').max(100, 'Efternamn får vara max 100 tecken'),
+  email: z.string().trim().min(1, 'E-post krävs').email('Ogiltig e-postadress').max(255, 'E-post får vara max 255 tecken'),
+  phone: z.string().max(50, 'Telefonnummer får vara max 50 tecken').optional().or(z.literal('')),
+  contact_type: z.enum(['Member', 'Newsletter', 'Teacher', 'Buyer', 'Other']),
+  is_teacher: z.boolean(),
+  notes: z.string().max(2000, 'Anteckningar får vara max 2000 tecken').optional().or(z.literal('')),
+});
+
 interface InlineEditContactProps {
   contact: Contact;
   onUpdate: () => void;
@@ -24,6 +35,7 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
   const { logAction } = useAuditLog();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     first_name: contact.first_name,
     last_name: contact.last_name,
@@ -35,8 +47,18 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
   });
 
   const handleSave = async () => {
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.email.trim()) {
-      toast({ title: 'Förnamn, efternamn och e-post krävs', variant: 'destructive' });
+    setErrors({});
+    
+    const result = contactSchema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast({ title: 'Valideringsfel', description: 'Kontrollera de markerade fälten', variant: 'destructive' });
       return;
     }
 
@@ -46,13 +68,13 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
     const { error } = await supabase
       .from('contacts')
       .update({
-        first_name: form.first_name.trim(),
-        last_name: form.last_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone || null,
-        contact_type: form.contact_type,
-        is_teacher: form.is_teacher,
-        notes: form.notes || null,
+        first_name: result.data.first_name,
+        last_name: result.data.last_name,
+        email: result.data.email,
+        phone: result.data.phone || null,
+        contact_type: result.data.contact_type,
+        is_teacher: result.data.is_teacher,
+        notes: result.data.notes || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', contact.id);
@@ -65,7 +87,7 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
 
     await logAction('contact', contact.id, 'update', beforeSnapshot as any, {
       ...beforeSnapshot,
-      ...form,
+      ...result.data,
     } as any);
 
     toast({ title: 'Kontaktuppgifter uppdaterade' });
@@ -84,6 +106,7 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
       is_teacher: contact.is_teacher,
       notes: contact.notes || '',
     });
+    setErrors({});
     setEditing(false);
   };
 
@@ -160,7 +183,10 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
               id="first_name"
               value={form.first_name}
               onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+              className={errors.first_name ? 'border-destructive' : ''}
+              maxLength={100}
             />
+            {errors.first_name && <p className="text-sm text-destructive">{errors.first_name}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="last_name">Efternamn *</Label>
@@ -168,7 +194,10 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
               id="last_name"
               value={form.last_name}
               onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+              className={errors.last_name ? 'border-destructive' : ''}
+              maxLength={100}
             />
+            {errors.last_name && <p className="text-sm text-destructive">{errors.last_name}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-post *</Label>
@@ -177,7 +206,10 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className={errors.email ? 'border-destructive' : ''}
+              maxLength={255}
             />
+            {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Telefon</Label>
@@ -185,7 +217,10 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
               id="phone"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className={errors.phone ? 'border-destructive' : ''}
+              maxLength={50}
             />
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
           </div>
           <div className="space-y-2">
             <Label>Voyado ID (skrivskyddat)</Label>
@@ -223,7 +258,10 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             rows={3}
+            className={errors.notes ? 'border-destructive' : ''}
+            maxLength={2000}
           />
+          {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
         </div>
       </CardContent>
     </Card>
