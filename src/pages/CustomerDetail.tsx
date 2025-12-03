@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CategoryBadge, TypeGroupBadge, RelationshipBadge } from '@/components/CategoryBadge';
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
+import { AddContactModal } from '@/components/AddContactModal';
 import { Customer, Contact, Account, Agreement, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
 import {
   Building2,
@@ -19,6 +20,8 @@ import {
   ExternalLink,
   School,
   ShoppingCart,
+  Plus,
+  UserCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,94 +38,103 @@ export default function CustomerDetail() {
   const [accounts, setAccounts] = useState<(Account & { agreement: Agreement | null })[]>([]);
   const [validationItems, setValidationItems] = useState<{ type: 'error' | 'warning' | 'info'; message: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addContactOpen, setAddContactOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchCustomerData() {
-      if (!id) return;
-      setLoading(true);
+  const fetchCustomerData = async () => {
+    if (!id) return;
+    setLoading(true);
 
-      try {
-        // Fetch customer with payer
-        const { data: customerData } = await supabase
+    try {
+      // Fetch customer with payer
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select(`
+          *,
+          payer:payer_customer_id (*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (customerData) {
+        setCustomer(customerData as CustomerDetailData);
+
+        // Fetch customers this customer pays for
+        const { data: paysForData } = await supabase
           .from('customers')
+          .select('*')
+          .eq('payer_customer_id', id);
+        setPaysFor((paysForData || []) as Customer[]);
+
+        // Fetch linked contacts
+        const { data: contactsData } = await supabase
+          .from('contact_customer_links')
           .select(`
             *,
-            payer:payer_customer_id (*)
+            contact:contact_id (*)
           `)
-          .eq('id', id)
-          .single();
+          .eq('customer_id', id);
+        setContacts((contactsData || []) as (ContactCustomerLink & { contact: Contact })[]);
 
-        if (customerData) {
-          setCustomer(customerData as CustomerDetailData);
-
-          // Fetch customers this customer pays for
-          const { data: paysForData } = await supabase
-            .from('customers')
-            .select('*')
-            .eq('payer_customer_id', id);
-          setPaysFor((paysForData || []) as Customer[]);
-
-          // Fetch linked contacts
-          const { data: contactsData } = await supabase
-            .from('contact_customer_links')
+        // Fetch teachers if school
+        let teachersData: (TeacherSchoolAssignment & { teacher: Contact })[] = [];
+        if (customerData.customer_category === 'Skola') {
+          const { data } = await supabase
+            .from('teacher_school_assignments')
             .select(`
               *,
-              contact:contact_id (*)
+              teacher:teacher_contact_id (*)
             `)
-            .eq('customer_id', id);
-          setContacts((contactsData || []) as (ContactCustomerLink & { contact: Contact })[]);
+            .eq('school_customer_id', id)
+            .eq('is_active', true);
+          teachersData = (data || []) as (TeacherSchoolAssignment & { teacher: Contact })[];
+          setTeachers(teachersData);
+        }
 
-          // Fetch teachers if school
-          let teachersData: (TeacherSchoolAssignment & { teacher: Contact })[] = [];
-          if (customerData.customer_category === 'Skola') {
-            const { data } = await supabase
-              .from('teacher_school_assignments')
-              .select(`
-                *,
-                teacher:teacher_contact_id (*)
-              `)
-              .eq('school_customer_id', id)
-              .eq('is_active', true);
-            teachersData = (data || []) as (TeacherSchoolAssignment & { teacher: Contact })[];
-            setTeachers(teachersData);
-          }
+        // Fetch accounts
+        const { data: accountsData } = await supabase
+          .from('accounts')
+          .select(`
+            *,
+            agreement:agreement_id (*)
+          `)
+          .eq('customer_id', id);
+        setAccounts((accountsData || []) as (Account & { agreement: Agreement | null })[]);
 
-          // Fetch accounts
-          const { data: accountsData } = await supabase
-            .from('accounts')
-            .select(`
-              *,
-              agreement:agreement_id (*)
-            `)
-            .eq('customer_id', id);
-          setAccounts((accountsData || []) as (Account & { agreement: Agreement | null })[]);
-
-          // Compute validation items
-          const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
-          const hasPrimary = (contactsData || []).some((l: ContactCustomerLink) => l.is_primary);
+        // Compute validation items
+        const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
+        const isPayer = (paysForData || []).length > 0;
+        const hasPrimary = (contactsData || []).some((l: ContactCustomerLink) => l.is_primary);
+        
+        // Only show contact warnings for non-payer customers
+        if (!isPayer) {
           if (!hasPrimary && (contactsData || []).length > 0) {
             items.push({ type: 'warning', message: 'Ingen primär kontakt angiven' });
           }
           if ((contactsData || []).length === 0) {
             items.push({ type: 'info', message: 'Inga kontakter kopplade till kunden' });
           }
-          if (customerData.customer_category === 'Skola' && !customerData.payer_customer_id) {
-            items.push({ type: 'warning', message: 'Skolan saknar betalare (kommun)' });
-          }
-          if (customerData.customer_category === 'Skola' && teachersData.length === 0) {
-            items.push({ type: 'info', message: 'Inga lärare registrerade vid skolan' });
-          }
-          setValidationItems(items);
         }
-      } catch (error) {
-        console.error('Error fetching customer:', error);
-      } finally {
-        setLoading(false);
+        
+        if (customerData.customer_category === 'Skola' && !customerData.payer_customer_id) {
+          items.push({ type: 'warning', message: 'Skolan saknar betalare (kommun)' });
+        }
+        if (customerData.customer_category === 'Skola' && teachersData.length === 0) {
+          items.push({ type: 'info', message: 'Inga lärare registrerade vid skolan' });
+        }
+        setValidationItems(items);
       }
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchCustomerData();
   }, [id]);
+
+  const isPayer = paysFor.length > 0;
 
   if (loading) {
     return (
@@ -164,6 +176,8 @@ export default function CustomerDetail() {
           <div className="w-16 h-16 rounded-xl bg-customer/10 flex items-center justify-center flex-shrink-0">
             {customer.customer_category === 'Skola' ? (
               <School className="h-8 w-8 text-school" />
+            ) : isPayer ? (
+              <CreditCard className="h-8 w-8 text-payer" />
             ) : (
               <Building2 className="h-8 w-8 text-customer" />
             )}
@@ -173,6 +187,7 @@ export default function CustomerDetail() {
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <CategoryBadge category={customer.customer_category} />
               <TypeGroupBadge typeGroup={customer.customer_type_group} />
+              {isPayer && <Badge variant="payer">Betalare</Badge>}
               {customer.is_active ? (
                 <Badge variant="success">Aktiv</Badge>
               ) : (
@@ -181,9 +196,6 @@ export default function CustomerDetail() {
             </div>
           </div>
         </div>
-
-        {/* Validation Pane */}
-        <ValidationPane items={validationItems} />
 
         {/* Tabs for main content */}
         <Tabs defaultValue="info" className="space-y-6">
@@ -278,14 +290,69 @@ export default function CustomerDetail() {
               </Card>
             </div>
 
+            {/* Payer Contact Person - only for payers */}
+            {isPayer && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <UserCircle className="h-5 w-5 text-payer" />
+                    Kontaktperson (betalare)
+                  </CardTitle>
+                  <CardDescription>Valfri kontaktperson för betalarkunden</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {contacts.length > 0 ? (
+                    <div className="space-y-3">
+                      {contacts.slice(0, 1).map((link) => (
+                        <Link
+                          key={link.id}
+                          to={`/contacts/${link.contact.id}`}
+                          className="flex items-center justify-between p-3 rounded-lg bg-payer/5 hover:bg-payer/10 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-contact/10 flex items-center justify-center">
+                              <Users className="h-5 w-5 text-contact" />
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {link.contact.first_name} {link.contact.last_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{link.contact.email}</p>
+                            </div>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <p className="text-muted-foreground">Ingen kontaktperson angiven (valfritt)</p>
+                      <Button variant="outline" size="sm" onClick={() => setAddContactOpen(true)} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Lägg till
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Contacts */}
             <Card>
               <CardHeader>
-                <CardTitle className="font-display text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5 text-contact" />
-                  Kontakter ({contacts.length})
-                </CardTitle>
-                <CardDescription>Kontakter kopplade till denna kund</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5 text-contact" />
+                      Kontakter ({contacts.length})
+                    </CardTitle>
+                    <CardDescription>Kontakter kopplade till denna kund</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setAddContactOpen(true)} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Lägg till kontakt
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {contacts.length === 0 ? (
@@ -398,6 +465,9 @@ export default function CustomerDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Validation Pane - at bottom */}
+            <ValidationPane items={validationItems} title="Datavalidering" />
           </TabsContent>
 
           <TabsContent value="orders">
@@ -416,6 +486,15 @@ export default function CustomerDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Add Contact Modal */}
+      <AddContactModal
+        open={addContactOpen}
+        onOpenChange={setAddContactOpen}
+        customerId={id!}
+        customerCategory={customer.customer_category}
+        onSuccess={fetchCustomerData}
+      />
     </AppLayout>
   );
 }

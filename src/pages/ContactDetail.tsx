@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CategoryBadge, ContactTypeBadge, RelationshipBadge } from '@/components/CategoryBadge';
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
+import { AddSchoolModal } from '@/components/AddSchoolModal';
 import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
 import {
   Users,
@@ -20,6 +21,7 @@ import {
   School,
   ExternalLink,
   ShoppingCart,
+  Plus,
 } from 'lucide-react';
 
 export default function ContactDetail() {
@@ -30,76 +32,77 @@ export default function ContactDetail() {
   const [validationItems, setValidationItems] = useState<{ type: 'error' | 'warning' | 'info'; message: string }[]>([]);
   const [emailDuplicates, setEmailDuplicates] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [addSchoolOpen, setAddSchoolOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchContactData() {
-      if (!id) return;
-      setLoading(true);
+  const fetchContactData = async () => {
+    if (!id) return;
+    setLoading(true);
 
-      try {
-        // Fetch contact
-        const { data: contactData } = await supabase
-          .from('contacts')
-          .select('*')
-          .eq('id', id)
-          .single();
+    try {
+      // Fetch contact
+      const { data: contactData } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-        if (contactData) {
-          setContact(contactData as Contact);
+      if (contactData) {
+        setContact(contactData as Contact);
 
-          // Fetch customer links
-          const { data: linksData } = await supabase
-            .from('contact_customer_links')
+        // Fetch customer links
+        const { data: linksData } = await supabase
+          .from('contact_customer_links')
+          .select(`
+            *,
+            customer:customer_id (*)
+          `)
+          .eq('contact_id', id);
+        setCustomerLinks((linksData || []) as (ContactCustomerLink & { customer: Customer })[]);
+
+        // Fetch teacher assignments if teacher
+        let assignmentsData: (TeacherSchoolAssignment & { school: Customer })[] = [];
+        if (contactData.is_teacher) {
+          const { data } = await supabase
+            .from('teacher_school_assignments')
             .select(`
               *,
-              customer:customer_id (*)
+              school:school_customer_id (*)
             `)
-            .eq('contact_id', id);
-          setCustomerLinks((linksData || []) as (ContactCustomerLink & { customer: Customer })[]);
-
-          // Fetch teacher assignments if teacher
-          let assignmentsData: (TeacherSchoolAssignment & { school: Customer })[] = [];
-          if (contactData.is_teacher) {
-            const { data } = await supabase
-              .from('teacher_school_assignments')
-              .select(`
-                *,
-                school:school_customer_id (*)
-              `)
-              .eq('teacher_contact_id', id)
-              .eq('is_active', true);
-            assignmentsData = (data || []) as (TeacherSchoolAssignment & { school: Customer })[];
-            setTeacherAssignments(assignmentsData);
-          }
-
-          // Check for email duplicates
-          const { count } = await supabase
-            .from('contacts')
-            .select('*', { count: 'exact', head: true })
-            .eq('email', contactData.email)
-            .is('merged_into_id', null);
-          setEmailDuplicates(count || 0);
-
-          // Compute validation items
-          const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
-          if ((count || 0) > 1) {
-            items.push({ type: 'warning', message: `E-postadressen används av ${count} kontakter` });
-          }
-          if (contactData.is_teacher && assignmentsData.length === 0) {
-            items.push({ type: 'warning', message: 'Lärare saknar skolkoppling' });
-          }
-          if ((linksData || []).length === 0) {
-            items.push({ type: 'info', message: 'Inga kundkopplingar' });
-          }
-          setValidationItems(items);
+            .eq('teacher_contact_id', id)
+            .eq('is_active', true);
+          assignmentsData = (data || []) as (TeacherSchoolAssignment & { school: Customer })[];
+          setTeacherAssignments(assignmentsData);
         }
-      } catch (error) {
-        console.error('Error fetching contact:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
 
+        // Check for email duplicates
+        const { count } = await supabase
+          .from('contacts')
+          .select('*', { count: 'exact', head: true })
+          .eq('email', contactData.email)
+          .is('merged_into_id', null);
+        setEmailDuplicates(count || 0);
+
+        // Compute validation items
+        const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
+        if ((count || 0) > 1) {
+          items.push({ type: 'warning', message: `E-postadressen används av ${count} kontakter` });
+        }
+        if (contactData.is_teacher && assignmentsData.length === 0) {
+          items.push({ type: 'warning', message: 'Lärare saknar skolkoppling' });
+        }
+        if ((linksData || []).length === 0) {
+          items.push({ type: 'info', message: 'Inga kundkopplingar' });
+        }
+        setValidationItems(items);
+      }
+    } catch (error) {
+      console.error('Error fetching contact:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchContactData();
   }, [id]);
 
@@ -157,9 +160,6 @@ export default function ContactDetail() {
             </div>
           </div>
         </div>
-
-        {/* Validation Pane */}
-        <ValidationPane items={validationItems} />
 
         {/* Tabs for main content */}
         <Tabs defaultValue="info" className="space-y-6">
@@ -262,11 +262,19 @@ export default function ContactDetail() {
             {contact.is_teacher && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="font-display text-lg flex items-center gap-2">
-                    <School className="h-5 w-5 text-school" />
-                    Undervisar vid ({teacherAssignments.length})
-                  </CardTitle>
-                  <CardDescription>Skolor där denna lärare undervisar</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="font-display text-lg flex items-center gap-2">
+                        <School className="h-5 w-5 text-school" />
+                        Undervisar vid ({teacherAssignments.length})
+                      </CardTitle>
+                      <CardDescription>Skolor där denna lärare undervisar</CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setAddSchoolOpen(true)} className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Lägg till skola
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {teacherAssignments.length === 0 ? (
@@ -298,6 +306,9 @@ export default function ContactDetail() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Validation Pane - at bottom */}
+            <ValidationPane items={validationItems} title="Datavalidering" />
           </TabsContent>
 
           <TabsContent value="orders">
@@ -316,6 +327,16 @@ export default function ContactDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Add School Modal */}
+      {contact.is_teacher && (
+        <AddSchoolModal
+          open={addSchoolOpen}
+          onOpenChange={setAddSchoolOpen}
+          teacherId={id!}
+          onSuccess={fetchContactData}
+        />
+      )}
     </AppLayout>
   );
 }
