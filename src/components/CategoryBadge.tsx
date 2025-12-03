@@ -71,7 +71,7 @@ interface RelationshipBadgeProps {
 const relationshipLabels: Record<RelationshipType, string> = {
   TeacherAtSchool: 'Lärare',
   BuyerAtCompany: 'Inköpare',
-  PrimaryContact: 'Primär kontakt',
+  PrimaryContact: 'Kontakt', // Legacy - ska inte användas längre
   Employee: 'Anställd',
   Other: 'Övrigt',
 };

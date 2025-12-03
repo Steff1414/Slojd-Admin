@@ -15,11 +15,10 @@ import { Contact, RelationshipType, ContactType } from '@/types/database';
 import { Search, UserPlus, Users, GraduationCap, Loader2 } from 'lucide-react';
 
 const RELATIONSHIP_TYPES: { value: RelationshipType; label: string }[] = [
-  { value: 'PrimaryContact', label: 'Primär kontakt' },
-  { value: 'BuyerAtCompany', label: 'Köpare' },
   { value: 'TeacherAtSchool', label: 'Lärare vid skola' },
+  { value: 'BuyerAtCompany', label: 'Köpare' },
   { value: 'Employee', label: 'Anställd' },
-  { value: 'Other', label: 'Övrig' },
+  { value: 'Other', label: 'Övrigt' },
 ];
 
 const CONTACT_TYPES: ContactType[] = ['Privatperson', 'Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
@@ -53,7 +52,7 @@ export function AddContactToCustomerModal({ open, onOpenChange, customerId, cust
     contact_type: 'Övrig' as ContactType,
     is_teacher: false,
   });
-  const [newRelationshipType, setNewRelationshipType] = useState<RelationshipType>('PrimaryContact');
+  const [newRelationshipType, setNewRelationshipType] = useState<RelationshipType>('Other');
 
   useEffect(() => {
     if (!open) {
@@ -86,7 +85,7 @@ export function AddContactToCustomerModal({ open, onOpenChange, customerId, cust
     if (existing) {
       setSelectedContacts(selectedContacts.filter(sc => sc.contact.id !== contact.id));
     } else {
-      setSelectedContacts([...selectedContacts, { contact, relationshipType: 'PrimaryContact', isPrimary: false }]);
+      setSelectedContacts([...selectedContacts, { contact, relationshipType: 'Other', isPrimary: false }]);
     }
   };
 
