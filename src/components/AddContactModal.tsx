@@ -22,11 +22,10 @@ interface AddContactModalProps {
 }
 
 const RELATIONSHIP_TYPES: { value: RelationshipType; label: string }[] = [
-  { value: 'PrimaryContact', label: 'Primär kontakt' },
   { value: 'TeacherAtSchool', label: 'Lärare vid skola' },
   { value: 'BuyerAtCompany', label: 'Köpare' },
   { value: 'Employee', label: 'Anställd' },
-  { value: 'Other', label: 'Annan' },
+  { value: 'Other', label: 'Övrigt' },
 ];
 
 export function AddContactModal({ open, onOpenChange, customerId, customerCategory, onSuccess }: AddContactModalProps) {
@@ -35,7 +34,7 @@ export function AddContactModal({ open, onOpenChange, customerId, customerCatego
   const [search, setSearch] = useState('');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [relationshipType, setRelationshipType] = useState<RelationshipType>('PrimaryContact');
+  const [relationshipType, setRelationshipType] = useState<RelationshipType>('Other');
   const [isPrimary, setIsPrimary] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -119,7 +118,7 @@ export function AddContactModal({ open, onOpenChange, customerId, customerCatego
     setSearch('');
     setContacts([]);
     setSelectedContact(null);
-    setRelationshipType('PrimaryContact');
+    setRelationshipType('Other');
     setIsPrimary(false);
   };
 

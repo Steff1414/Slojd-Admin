@@ -60,7 +60,7 @@ export function AddContactToCustomerModal({ open, onOpenChange, customerId, cust
       setSearchResults([]);
       setSelectedContacts([]);
       setNewContact({ first_name: '', last_name: '', email: '', phone: '', contact_type: 'Övrig', is_teacher: false });
-      setNewRelationshipType('PrimaryContact');
+      setNewRelationshipType('Other');
       setTab('existing');
     }
   }, [open]);
