@@ -1,6 +1,6 @@
 export type CustomerCategory = 'Privat' | 'Personal' | 'Företag' | 'ÅF' | 'UF' | 'Skola' | 'Omsorg' | 'Förening' | 'Kommun och Region';
 export type CustomerTypeGroup = 'B2C' | 'B2B' | 'B2G';
-export type ContactType = 'Medlem' | 'Nyhetsbrev' | 'Lärare' | 'Köpare' | 'Övrig';
+export type ContactType = 'Privatperson' | 'Medlem' | 'Nyhetsbrev' | 'Lärare' | 'Köpare' | 'Övrig';
 export type RelationshipType = 'TeacherAtSchool' | 'BuyerAtCompany' | 'PrimaryContact' | 'Employee' | 'Other';
 
 export interface Customer {
@@ -29,6 +29,9 @@ export interface Contact {
   contact_type: ContactType;
   is_teacher: boolean;
   notes: string | null;
+  wants_sms: boolean;
+  wants_newsletter: boolean;
+  wants_personalized_offers: boolean;
   created_at: string;
   updated_at: string;
 }

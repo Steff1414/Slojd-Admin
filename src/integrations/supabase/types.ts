@@ -175,6 +175,9 @@ export type Database = {
           phone: string | null
           updated_at: string | null
           voyado_id: string
+          wants_newsletter: boolean | null
+          wants_personalized_offers: boolean | null
+          wants_sms: boolean | null
         }
         Insert: {
           contact_type?: Database["public"]["Enums"]["contact_type"] | null
@@ -189,6 +192,9 @@ export type Database = {
           phone?: string | null
           updated_at?: string | null
           voyado_id: string
+          wants_newsletter?: boolean | null
+          wants_personalized_offers?: boolean | null
+          wants_sms?: boolean | null
         }
         Update: {
           contact_type?: Database["public"]["Enums"]["contact_type"] | null
@@ -203,6 +209,9 @@ export type Database = {
           phone?: string | null
           updated_at?: string | null
           voyado_id?: string
+          wants_newsletter?: boolean | null
+          wants_personalized_offers?: boolean | null
+          wants_sms?: boolean | null
         }
         Relationships: [
           {
@@ -547,7 +556,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      contact_type: "Medlem" | "Nyhetsbrev" | "Lärare" | "Köpare" | "Övrig"
+      contact_type:
+        | "Medlem"
+        | "Nyhetsbrev"
+        | "Lärare"
+        | "Köpare"
+        | "Övrig"
+        | "Privatperson"
       customer_category:
         | "Privat"
         | "Personal"
@@ -693,7 +708,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      contact_type: ["Medlem", "Nyhetsbrev", "Lärare", "Köpare", "Övrig"],
+      contact_type: [
+        "Medlem",
+        "Nyhetsbrev",
+        "Lärare",
+        "Köpare",
+        "Övrig",
+        "Privatperson",
+      ],
       customer_category: [
         "Privat",
         "Personal",
