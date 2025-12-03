@@ -20,7 +20,11 @@ interface AddPayerModalProps {
   onSuccess: () => void;
 }
 
-const CATEGORY_OPTIONS: CustomerCategory[] = ['Företag', 'Omsorg', 'Förening'];
+const CATEGORY_OPTIONS: { value: CustomerCategory; label: string }[] = [
+  { value: 'Företag', label: 'Företag' },
+  { value: 'Omsorg', label: 'Skola och Omsorg' },
+  { value: 'Förening', label: 'Förening' },
+];
 const TYPE_GROUP_OPTIONS: CustomerTypeGroup[] = ['B2B', 'B2G'];
 
 export function AddPayerModal({ open, onOpenChange, customerId, onSuccess }: AddPayerModalProps) {
@@ -231,7 +235,7 @@ export function AddPayerModal({ open, onOpenChange, customerId, onSuccess }: Add
                     </SelectTrigger>
                     <SelectContent>
                       {CATEGORY_OPTIONS.map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
