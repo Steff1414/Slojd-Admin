@@ -240,7 +240,7 @@ export default function CustomerDetail() {
                       </CardTitle>
                       <CardDescription>Vem som betalar för denna kund</CardDescription>
                     </div>
-                    {needsPayer && (
+                    {needsPayer && !customer.payer && (
                       <Button variant="outline" size="sm" onClick={() => setAddPayerOpen(true)} className="gap-2">
                         <Plus className="h-4 w-4" />
                         Lägg till betalare
@@ -265,16 +265,8 @@ export default function CustomerDetail() {
                       </div>
                       <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
                     </Link>
-                  ) : needsPayer ? (
-                    <div className="text-center py-4">
-                      <p className="text-muted-foreground mb-3">Ingen betalare angiven</p>
-                      <Button variant="outline" onClick={() => setAddPayerOpen(true)} className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Lägg till betalare
-                      </Button>
-                    </div>
                   ) : (
-                    <p className="text-muted-foreground">Ingen extern betalare</p>
+                    <p className="text-muted-foreground">Ingen betalare angiven</p>
                   )}
 
                   {paysFor.length > 0 && (
