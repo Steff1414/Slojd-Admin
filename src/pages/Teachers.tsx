@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Contact, TeacherSchoolAssignment, Customer } from '@/types/database';
-import { Search, GraduationCap, Mail, School } from 'lucide-react';
+import { Search, GraduationCap, Mail, School, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TeacherWithSchools extends Contact {
   schools: (TeacherSchoolAssignment & { school: Customer })[];
@@ -77,11 +78,19 @@ export default function Teachers() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Lärare</h1>
-          <p className="text-muted-foreground mt-1">
-            Alla lärare och deras skolkopplingar
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-foreground">Lärare</h1>
+            <p className="text-muted-foreground mt-1">
+              Alla lärare och deras skolkopplingar
+            </p>
+          </div>
+          <Link to="/teachers/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Ny lärare
+            </Button>
+          </Link>
         </div>
 
         {/* Search */}

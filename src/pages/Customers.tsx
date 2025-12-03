@@ -88,11 +88,19 @@ export default function Customers() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Kunder</h1>
-          <p className="text-muted-foreground mt-1">
-            Hantera kunder, företag, skolor och kommuner
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-foreground">Kunder</h1>
+            <p className="text-muted-foreground mt-1">
+              Hantera kunder, företag, skolor och kommuner
+            </p>
+          </div>
+          <Link to="/customers/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Ny kund
+            </Button>
+          </Link>
         </div>
 
         {/* Filters */}
