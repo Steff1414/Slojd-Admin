@@ -63,6 +63,9 @@ export interface ContactCustomerLink {
   customer_id: string;
   relationship_type: RelationshipType;
   is_primary: boolean;
+  wants_sms?: boolean;
+  wants_newsletter?: boolean;
+  wants_personalized_offers?: boolean;
   created_at: string;
   contact?: Contact;
   customer?: Customer;

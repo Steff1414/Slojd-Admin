@@ -127,6 +127,9 @@ export type Database = {
           id: string
           is_primary: boolean | null
           relationship_type: Database["public"]["Enums"]["relationship_type"]
+          wants_newsletter: boolean | null
+          wants_personalized_offers: boolean | null
+          wants_sms: boolean | null
         }
         Insert: {
           contact_id: string
@@ -135,6 +138,9 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           relationship_type: Database["public"]["Enums"]["relationship_type"]
+          wants_newsletter?: boolean | null
+          wants_personalized_offers?: boolean | null
+          wants_sms?: boolean | null
         }
         Update: {
           contact_id?: string
@@ -143,6 +149,9 @@ export type Database = {
           id?: string
           is_primary?: boolean | null
           relationship_type?: Database["public"]["Enums"]["relationship_type"]
+          wants_newsletter?: boolean | null
+          wants_personalized_offers?: boolean | null
+          wants_sms?: boolean | null
         }
         Relationships: [
           {
