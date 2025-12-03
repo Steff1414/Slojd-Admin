@@ -10,7 +10,7 @@ import { CategoryBadge, TypeGroupBadge } from '@/components/CategoryBadge';
 import { Customer, CustomerCategory, CustomerTypeGroup } from '@/types/database';
 import { Search, Building2, Filter, X, Plus } from 'lucide-react';
 
-const categories: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening'];
+const categories: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening', 'Kommun och Region'];
 const typeGroups: CustomerTypeGroup[] = ['B2C', 'B2B', 'B2G'];
 
 export default function Customers() {

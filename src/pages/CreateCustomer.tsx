@@ -12,7 +12,7 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { ArrowLeft, Building2, Save } from 'lucide-react';
 import { CustomerCategory, CustomerTypeGroup } from '@/types/database';
 
-const CATEGORIES: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening'];
+const CATEGORIES: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening', 'Kommun och Region'];
 const TYPE_GROUPS: CustomerTypeGroup[] = ['B2C', 'B2B', 'B2G'];
 
 export default function CreateCustomer() {

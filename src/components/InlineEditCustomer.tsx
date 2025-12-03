@@ -12,12 +12,12 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { Customer, CustomerCategory, CustomerTypeGroup } from '@/types/database';
 import { Pencil, Save, X } from 'lucide-react';
 
-const CATEGORIES: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening'];
+const CATEGORIES: CustomerCategory[] = ['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening', 'Kommun och Region'];
 const TYPE_GROUPS: CustomerTypeGroup[] = ['B2C', 'B2B', 'B2G'];
 
 const customerSchema = z.object({
   name: z.string().trim().min(1, 'Namn krävs').max(255, 'Namn får vara max 255 tecken'),
-  customer_category: z.enum(['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening']),
+  customer_category: z.enum(['Privat', 'Personal', 'Företag', 'ÅF', 'UF', 'Skola', 'Omsorg', 'Förening', 'Kommun och Region']),
   customer_type_group: z.enum(['B2C', 'B2B', 'B2G']),
   is_active: z.boolean(),
   voyado_id: z.string().max(100, 'Voyado ID får vara max 100 tecken').optional().or(z.literal('')),
