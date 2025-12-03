@@ -457,13 +457,7 @@ export default function CustomerDetail() {
               </CardHeader>
               <CardContent>
                 {accounts.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground mb-3">Inga konton</p>
-                    <Button variant="outline" onClick={() => setAddAgreementOpen(true)} className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Lägg till avtal
-                    </Button>
-                  </div>
+                  <p className="text-muted-foreground">Inga konton</p>
                 ) : (
                   <div className="space-y-3">
                     {accounts.map((account) => (
