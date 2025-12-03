@@ -13,14 +13,14 @@ import { useAuditLog } from '@/hooks/useAuditLog';
 import { Contact, ContactType } from '@/types/database';
 import { Pencil, Save, X, Mail, Phone } from 'lucide-react';
 
-const CONTACT_TYPES: ContactType[] = ['Member', 'Newsletter', 'Teacher', 'Buyer', 'Other'];
+const CONTACT_TYPES: ContactType[] = ['Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig'];
 
 const contactSchema = z.object({
   first_name: z.string().trim().min(1, 'Förnamn krävs').max(100, 'Förnamn får vara max 100 tecken'),
   last_name: z.string().trim().min(1, 'Efternamn krävs').max(100, 'Efternamn får vara max 100 tecken'),
   email: z.string().trim().min(1, 'E-post krävs').email('Ogiltig e-postadress').max(255, 'E-post får vara max 255 tecken'),
   phone: z.string().max(50, 'Telefonnummer får vara max 50 tecken').optional().or(z.literal('')),
-  contact_type: z.enum(['Member', 'Newsletter', 'Teacher', 'Buyer', 'Other']),
+  contact_type: z.enum(['Medlem', 'Nyhetsbrev', 'Lärare', 'Köpare', 'Övrig']),
   is_teacher: z.boolean(),
   notes: z.string().max(2000, 'Anteckningar får vara max 2000 tecken').optional().or(z.literal('')),
 });
