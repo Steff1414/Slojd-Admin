@@ -12,6 +12,13 @@ import CustomerDetail from "./pages/CustomerDetail";
 import Contacts from "./pages/Contacts";
 import ContactDetail from "./pages/ContactDetail";
 import Teachers from "./pages/Teachers";
+import CreateCustomer from "./pages/CreateCustomer";
+import CreateContact from "./pages/CreateContact";
+import CreateTeacher from "./pages/CreateTeacher";
+import AuditLog from "./pages/AuditLog";
+import MergeContacts from "./pages/MergeContacts";
+import RelationsExplorer from "./pages/RelationsExplorer";
+import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,54 +48,19 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/customers"
-        element={
-          <ProtectedRoute>
-            <Customers />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/customers/:id"
-        element={
-          <ProtectedRoute>
-            <CustomerDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/contacts"
-        element={
-          <ProtectedRoute>
-            <Contacts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/contacts/:id"
-        element={
-          <ProtectedRoute>
-            <ContactDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/teachers"
-        element={
-          <ProtectedRoute>
-            <Teachers />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+      <Route path="/customers/new" element={<ProtectedRoute><CreateCustomer /></ProtectedRoute>} />
+      <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetail /></ProtectedRoute>} />
+      <Route path="/contacts" element={<ProtectedRoute><Contacts /></ProtectedRoute>} />
+      <Route path="/contacts/new" element={<ProtectedRoute><CreateContact /></ProtectedRoute>} />
+      <Route path="/contacts/:id" element={<ProtectedRoute><ContactDetail /></ProtectedRoute>} />
+      <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
+      <Route path="/teachers/new" element={<ProtectedRoute><CreateTeacher /></ProtectedRoute>} />
+      <Route path="/audit-log" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
+      <Route path="/merge-contacts" element={<ProtectedRoute><MergeContacts /></ProtectedRoute>} />
+      <Route path="/relations" element={<ProtectedRoute><RelationsExplorer /></ProtectedRoute>} />
+      <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

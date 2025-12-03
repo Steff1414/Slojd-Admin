@@ -86,6 +86,39 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_snapshot: Json | null
+          before_snapshot: Json | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_snapshot?: Json | null
+          before_snapshot?: Json | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_snapshot?: Json | null
+          before_snapshot?: Json | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       contact_customer_links: {
         Row: {
           contact_id: string
@@ -137,6 +170,7 @@ export type Database = {
           id: string
           is_teacher: boolean | null
           last_name: string
+          merged_into_id: string | null
           notes: string | null
           phone: string | null
           updated_at: string | null
@@ -150,6 +184,7 @@ export type Database = {
           id?: string
           is_teacher?: boolean | null
           last_name: string
+          merged_into_id?: string | null
           notes?: string | null
           phone?: string | null
           updated_at?: string | null
@@ -163,12 +198,21 @@ export type Database = {
           id?: string
           is_teacher?: boolean | null
           last_name?: string
+          merged_into_id?: string | null
           notes?: string | null
           phone?: string | null
           updated_at?: string | null
           voyado_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_merged_into_id_fkey"
+            columns: ["merged_into_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -252,6 +296,61 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          account_id: string | null
+          buyer_contact_id: string | null
+          created_at: string | null
+          customer_id: string
+          id: string
+          order_number: string
+          status: string | null
+          total_amount: number
+        }
+        Insert: {
+          account_id?: string | null
+          buyer_contact_id?: string | null
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          order_number: string
+          status?: string | null
+          total_amount?: number
+        }
+        Update: {
+          account_id?: string | null
+          buyer_contact_id?: string | null
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          order_number?: string
+          status?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_buyer_contact_id_fkey"
+            columns: ["buyer_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       password_reset_tokens: {
         Row: {
           created_at: string | null
@@ -294,6 +393,7 @@ export type Database = {
           email: string
           id: string
           is_active: boolean | null
+          must_change_password: boolean | null
           updated_at: string | null
           user_id: string
         }
@@ -303,6 +403,7 @@ export type Database = {
           email: string
           id?: string
           is_active?: boolean | null
+          must_change_password?: boolean | null
           updated_at?: string | null
           user_id: string
         }
@@ -312,6 +413,7 @@ export type Database = {
           email?: string
           id?: string
           is_active?: boolean | null
+          must_change_password?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
@@ -409,14 +511,42 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       contact_type: "Member" | "Newsletter" | "Teacher" | "Buyer" | "Other"
       customer_category:
         | "Privat"
@@ -561,6 +691,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       contact_type: ["Member", "Newsletter", "Teacher", "Buyer", "Other"],
       customer_category: [
         "Privat",
