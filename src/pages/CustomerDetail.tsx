@@ -229,67 +229,84 @@ export default function CustomerDetail() {
               {/* Basic Info with Inline Edit */}
               <InlineEditCustomer customer={customer} onUpdate={fetchCustomerData} />
 
-              {/* Payer Info */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="font-display text-lg flex items-center gap-2">
-                        <CreditCard className="h-5 w-5 text-payer" />
-                        Betalare
-                      </CardTitle>
-                      <CardDescription>Vem som betalar för denna kund</CardDescription>
-                    </div>
-                    {needsPayer && !customer.payer && (
-                      <Button variant="outline" size="sm" onClick={() => setAddPayerOpen(true)} className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Lägg till betalare
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {customer.payer ? (
-                    <Link
-                      to={`/customers/${customer.payer.id}`}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-payer/5 hover:bg-payer/10 transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-payer/10 flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-payer" />
-                      </div>
+              {/* Payer Info - Only for B2B/B2G customers */}
+              {customer.customer_type_group !== 'B2C' ? (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-foreground">{customer.payer.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {customer.payer.bc_customer_number}
-                        </p>
+                        <CardTitle className="font-display text-lg flex items-center gap-2">
+                          <CreditCard className="h-5 w-5 text-payer" />
+                          Betalare
+                        </CardTitle>
+                        <CardDescription>Vem som betalar för denna kund</CardDescription>
                       </div>
-                      <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
-                    </Link>
-                  ) : (
-                    <p className="text-muted-foreground">Ingen betalare angiven</p>
-                  )}
-
-                  {paysFor.length > 0 && (
-                    <div className="mt-6">
-                      <p className="text-sm font-medium text-muted-foreground mb-3">
-                        Betalar för ({paysFor.length})
-                      </p>
-                      <div className="space-y-2">
-                        {paysFor.map((c) => (
-                          <Link
-                            key={c.id}
-                            to={`/customers/${c.id}`}
-                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
-                          >
-                            <CategoryBadge category={c.customer_category} />
-                            <span className="font-medium">{c.name}</span>
-                          </Link>
-                        ))}
-                      </div>
+                      {needsPayer && !customer.payer && (
+                        <Button variant="outline" size="sm" onClick={() => setAddPayerOpen(true)} className="gap-2">
+                          <Plus className="h-4 w-4" />
+                          Lägg till betalare
+                        </Button>
+                      )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent>
+                    {customer.payer ? (
+                      <Link
+                        to={`/customers/${customer.payer.id}`}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-payer/5 hover:bg-payer/10 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-payer/10 flex items-center justify-center">
+                          <Building2 className="h-5 w-5 text-payer" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{customer.payer.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {customer.payer.bc_customer_number}
+                          </p>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
+                      </Link>
+                    ) : (
+                      <p className="text-muted-foreground">Ingen betalare angiven</p>
+                    )}
+
+                    {paysFor.length > 0 && (
+                      <div className="mt-6">
+                        <p className="text-sm font-medium text-muted-foreground mb-3">
+                          Betalar för ({paysFor.length})
+                        </p>
+                        <div className="space-y-2">
+                          {paysFor.map((c) => (
+                            <Link
+                              key={c.id}
+                              to={`/customers/${c.id}`}
+                              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                            >
+                              <CategoryBadge category={c.customer_category} />
+                              <span className="font-medium">{c.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5 text-contact" />
+                      Privatkund
+                    </CardTitle>
+                    <CardDescription>Privatpersoner hanterar sina egna betalningar</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      Betalare är inte tillämpligt för privatkunder (B2C)
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Payer Contact Person - only for payers */}
