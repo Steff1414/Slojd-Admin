@@ -123,7 +123,7 @@ export async function executeImport(
         for (const bcNum of row.linkedBcCustomerNumbers) {
           const customerId = bcToId.get(bcNum);
           if (customerId) {
-            const relationshipType = row.isTeacher ? 'TeacherAtSchool' : 'PrimaryContact';
+            const relationshipType = row.isTeacher ? 'TeacherAtSchool' : 'Other';
             
             await supabase.from('contact_customer_links').insert({
               contact_id: created.id,

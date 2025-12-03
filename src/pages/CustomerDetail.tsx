@@ -110,9 +110,7 @@ export default function CustomerDetail() {
         // Compute validation items
         const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
         const isPayer = (paysForData || []).length > 0;
-        const hasPrimary = (contactsData || []).some((l: ContactCustomerLink) => 
-          l.is_primary || l.relationship_type === 'PrimaryContact'
-        );
+        const hasPrimary = (contactsData || []).some((l: ContactCustomerLink) => l.is_primary);
         
         // Only show contact warnings for non-payer customers
         if (!isPayer) {
