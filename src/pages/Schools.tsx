@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,51 +16,79 @@ interface SchoolCustomer {
   customer_category: CustomerCategory;
   customer_type_group: string;
   is_active: boolean;
-  payer: { id: string; name: string } | null;
+  payer_customer_id: string | null;
+  payer?: { id: string; name: string } | null;
 }
 
 export default function Schools() {
-  const [schools, setSchools] = useState<SchoolCustomer[]>([]);
+  const [allSchools, setAllSchools] = useState<SchoolCustomer[]>([]);
+  const [payers, setPayers] = useState<Record<string, { id: string; name: string }>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchSchools();
-  }, [searchQuery]);
+  }, []);
 
   const fetchSchools = async () => {
     setLoading(true);
-    let query = supabase
+    
+    // Fetch all schools
+    const { data: schoolsData, error } = await supabase
       .from('customers')
-      .select(`
-        id,
-        name,
-        bc_customer_number,
-        customer_category,
-        customer_type_group,
-        is_active,
-        payer:customers!customers_payer_customer_id_fkey(id, name)
-      `)
+      .select('id, name, bc_customer_number, customer_category, customer_type_group, is_active, payer_customer_id')
       .eq('customer_category', 'Skola')
       .order('name');
 
-    if (searchQuery) {
-      query = query.or(`name.ilike.%${searchQuery}%,bc_customer_number.ilike.%${searchQuery}%`);
-    }
-
-    const { data, error } = await query;
-
     if (error) {
       console.error('Error fetching schools:', error);
-    } else {
-      const mapped = (data || []).map(d => ({
-        ...d,
-        payer: Array.isArray(d.payer) && d.payer.length > 0 ? d.payer[0] : null
-      }));
-      setSchools(mapped);
+      setLoading(false);
+      return;
     }
+
+    const schools = schoolsData || [];
+    setAllSchools(schools as SchoolCustomer[]);
+
+    // Fetch payer info for schools that have payers
+    const payerIds = [...new Set(schools.filter(s => s.payer_customer_id).map(s => s.payer_customer_id))];
+    if (payerIds.length > 0) {
+      const { data: payerData } = await supabase
+        .from('customers')
+        .select('id, name')
+        .in('id', payerIds);
+
+      if (payerData) {
+        const payerMap: Record<string, { id: string; name: string }> = {};
+        payerData.forEach(p => {
+          payerMap[p.id] = { id: p.id, name: p.name };
+        });
+        setPayers(payerMap);
+      }
+    }
+
     setLoading(false);
   };
+
+  // Debounced and filtered schools
+  const filteredSchools = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return allSchools.map(s => ({
+        ...s,
+        payer: s.payer_customer_id ? payers[s.payer_customer_id] || null : null
+      }));
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return allSchools
+      .filter(s => 
+        s.name.toLowerCase().includes(query) || 
+        s.bc_customer_number.toLowerCase().includes(query)
+      )
+      .map(s => ({
+        ...s,
+        payer: s.payer_customer_id ? payers[s.payer_customer_id] || null : null
+      }));
+  }, [allSchools, payers, searchQuery]);
 
   return (
     <AppLayout>
@@ -79,7 +107,7 @@ export default function Schools() {
                   Skollista
                 </CardTitle>
                 <CardDescription>
-                  {schools.length} skolor totalt
+                  {filteredSchools.length} av {allSchools.length} skolor
                 </CardDescription>
               </div>
               <div className="relative w-72">
@@ -96,8 +124,10 @@ export default function Schools() {
           <CardContent>
             {loading ? (
               <p className="text-muted-foreground text-center py-8">Laddar...</p>
-            ) : schools.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">Inga skolor hittades</p>
+            ) : filteredSchools.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                {searchQuery ? 'Inga skolor matchar sökningen' : 'Inga skolor hittades'}
+              </p>
             ) : (
               <Table>
                 <TableHeader>
@@ -110,7 +140,7 @@ export default function Schools() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {schools.map((school) => (
+                  {filteredSchools.map((school) => (
                     <TableRow key={school.id} className="cursor-pointer hover:bg-muted/50">
                       <TableCell>
                         <Link to={`/customers/${school.id}`} className="font-medium text-primary hover:underline">
