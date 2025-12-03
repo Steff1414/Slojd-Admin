@@ -105,6 +105,7 @@ export interface EmailTemplate {
   body_template: string;
   description: string | null;
   is_active: boolean;
+  category?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -118,6 +119,8 @@ export interface EmailMessage {
   subject: string;
   body: string;
   status: EmailStatus;
+  channel?: string | null;
+  category?: string | null;
   related_order_id: string | null;
   related_basket_id: string | null;
   sent_at: string | null;
@@ -186,4 +189,32 @@ export interface CategoryAffinity {
     spend: number;
     quantity: number;
   }[];
+}
+
+// Phase 4B Types
+export type AddressType = 'BILLING' | 'DELIVERY' | 'ALTERNATIVE_DELIVERY';
+export type EmailChannel = 'EMAIL' | 'SMS' | 'NEWSLETTER' | 'SYSTEM';
+export type EmailCategory = 'WELCOME' | 'ORDER_CONFIRMATION' | 'ORDER_RECEIVED' | 'ORDER_DELIVERED' | 'PURCHASE_THANK_YOU' | 'RECEIPT' | 'ABANDONED_CART_REMINDER' | 'NEWSLETTER' | 'OTHER';
+
+export interface CustomerAddress {
+  id: string;
+  customer_id: string;
+  address_type: AddressType;
+  label: string | null;
+  name: string | null;
+  street: string;
+  postal_code: string;
+  city: string;
+  region: string | null;
+  country: string;
+  is_approved_delivery_address: boolean;
+  is_default_for_type: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactWithLatestEmail extends Contact {
+  latest_email_category?: EmailCategory | null;
+  latest_email_channel?: EmailChannel | null;
+  latest_email_at?: string | null;
 }

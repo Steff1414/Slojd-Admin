@@ -244,6 +244,65 @@ export type Database = {
           },
         ]
       }
+      customer_addresses: {
+        Row: {
+          address_type: Database["public"]["Enums"]["address_type"]
+          city: string
+          country: string
+          created_at: string | null
+          customer_id: string
+          id: string
+          is_approved_delivery_address: boolean | null
+          is_default_for_type: boolean | null
+          label: string | null
+          name: string | null
+          postal_code: string
+          region: string | null
+          street: string
+          updated_at: string | null
+        }
+        Insert: {
+          address_type?: Database["public"]["Enums"]["address_type"]
+          city: string
+          country?: string
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          is_approved_delivery_address?: boolean | null
+          is_default_for_type?: boolean | null
+          label?: string | null
+          name?: string | null
+          postal_code: string
+          region?: string | null
+          street: string
+          updated_at?: string | null
+        }
+        Update: {
+          address_type?: Database["public"]["Enums"]["address_type"]
+          city?: string
+          country?: string
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          is_approved_delivery_address?: boolean | null
+          is_default_for_type?: boolean | null
+          label?: string | null
+          name?: string | null
+          postal_code?: string
+          region?: string | null
+          street?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           bc_customer_number: string
@@ -300,6 +359,8 @@ export type Database = {
       email_messages: {
         Row: {
           body: string
+          category: Database["public"]["Enums"]["email_category"] | null
+          channel: Database["public"]["Enums"]["email_channel"] | null
           contact_id: string
           created_at: string | null
           error_message: string | null
@@ -316,6 +377,8 @@ export type Database = {
         }
         Insert: {
           body: string
+          category?: Database["public"]["Enums"]["email_category"] | null
+          channel?: Database["public"]["Enums"]["email_channel"] | null
           contact_id: string
           created_at?: string | null
           error_message?: string | null
@@ -332,6 +395,8 @@ export type Database = {
         }
         Update: {
           body?: string
+          category?: Database["public"]["Enums"]["email_category"] | null
+          channel?: Database["public"]["Enums"]["email_channel"] | null
           contact_id?: string
           created_at?: string | null
           error_message?: string | null
@@ -373,6 +438,7 @@ export type Database = {
       email_templates: {
         Row: {
           body_template: string
+          category: Database["public"]["Enums"]["email_category"] | null
           created_at: string | null
           description: string | null
           id: string
@@ -384,6 +450,7 @@ export type Database = {
         }
         Insert: {
           body_template: string
+          category?: Database["public"]["Enums"]["email_category"] | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -395,6 +462,7 @@ export type Database = {
         }
         Update: {
           body_template?: string
+          category?: Database["public"]["Enums"]["email_category"] | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -814,6 +882,7 @@ export type Database = {
       }
     }
     Enums: {
+      address_type: "BILLING" | "DELIVERY" | "ALTERNATIVE_DELIVERY"
       app_role: "admin" | "moderator" | "user"
       contact_type:
         | "Medlem"
@@ -833,6 +902,17 @@ export type Database = {
         | "Förening"
         | "Kommun och Region"
       customer_type_group: "B2C" | "B2B" | "B2G"
+      email_category:
+        | "WELCOME"
+        | "ORDER_CONFIRMATION"
+        | "ORDER_RECEIVED"
+        | "ORDER_DELIVERED"
+        | "PURCHASE_THANK_YOU"
+        | "RECEIPT"
+        | "ABANDONED_CART_REMINDER"
+        | "NEWSLETTER"
+        | "OTHER"
+      email_channel: "EMAIL" | "SMS" | "NEWSLETTER" | "SYSTEM"
       email_status: "QUEUED" | "SENT" | "FAILED"
       relationship_type:
         | "TeacherAtSchool"
@@ -974,6 +1054,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      address_type: ["BILLING", "DELIVERY", "ALTERNATIVE_DELIVERY"],
       app_role: ["admin", "moderator", "user"],
       contact_type: [
         "Medlem",
@@ -995,6 +1076,18 @@ export const Constants = {
         "Kommun och Region",
       ],
       customer_type_group: ["B2C", "B2B", "B2G"],
+      email_category: [
+        "WELCOME",
+        "ORDER_CONFIRMATION",
+        "ORDER_RECEIVED",
+        "ORDER_DELIVERED",
+        "PURCHASE_THANK_YOU",
+        "RECEIPT",
+        "ABANDONED_CART_REMINDER",
+        "NEWSLETTER",
+        "OTHER",
+      ],
+      email_channel: ["EMAIL", "SMS", "NEWSLETTER", "SYSTEM"],
       email_status: ["QUEUED", "SENT", "FAILED"],
       relationship_type: [
         "TeacherAtSchool",
