@@ -13,22 +13,21 @@ import { AddSchoolModal } from '@/components/AddSchoolModal';
 import { AddCustomerLinkModal } from '@/components/AddCustomerLinkModal';
 import { InlineEditContact } from '@/components/InlineEditContact';
 import { RolesTab } from '@/components/RolesTab';
+import { RolePreferencesOverview } from '@/components/RolePreferencesOverview';
+import { UserAccountManagement } from '@/components/UserAccountManagement';
 import { MergeHistory } from '@/components/MergeHistory';
 import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment, Profile } from '@/types/database';
 import {
   Users,
   ArrowLeft,
-  Mail,
-  Phone,
   GraduationCap,
   Building2,
   School,
   ExternalLink,
   ShoppingCart,
   Plus,
-  UserCircle,
-  KeyRound,
   Bell,
+  KeyRound,
 } from 'lucide-react';
 
 export default function ContactDetail() {
@@ -307,36 +306,17 @@ export default function ContactDetail() {
               </Card>
             )}
 
-            {/* User Account Info */}
+            {/* User Account Management */}
             {profile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-display text-lg flex items-center gap-2">
-                    <UserCircle className="h-5 w-5 text-primary" />
-                    Användarkonto
-                  </CardTitle>
-                  <CardDescription>Inloggningsinformation för denna kontakt</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <KeyRound className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{profile.email}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {profile.is_active ? 'Aktivt konto' : 'Inaktivt konto'}
-                      </p>
-                    </div>
-                    {profile.is_active ? (
-                      <Badge variant="success">Aktiv</Badge>
-                    ) : (
-                      <Badge variant="destructive">Inaktiv</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <UserAccountManagement 
+                profile={profile} 
+                contactId={id!}
+                onUpdate={fetchContactData} 
+              />
             )}
+
+            {/* Role Preferences Overview */}
+            <RolePreferencesOverview customerLinks={customerLinks} />
 
             {/* Validation Pane - at bottom */}
             <ValidationPane items={validationItems} title="Datavalidering" />
