@@ -24,11 +24,10 @@ interface AddCustomerLinkModalProps {
 }
 
 const RELATIONSHIP_TYPES: { value: RelationshipType; label: string }[] = [
-  { value: 'PrimaryContact', label: 'Primär kontakt' },
   { value: 'TeacherAtSchool', label: 'Lärare vid skola' },
   { value: 'BuyerAtCompany', label: 'Köpare' },
   { value: 'Employee', label: 'Anställd' },
-  { value: 'Other', label: 'Annan' },
+  { value: 'Other', label: 'Övrigt' },
 ];
 
 export function AddCustomerLinkModal({ 

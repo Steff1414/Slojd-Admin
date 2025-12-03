@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CategoryBadge, ContactTypeBadge, RelationshipBadge } from '@/components/CategoryBadge';
+import { CategoryBadge, ContactTypeBadge } from '@/components/CategoryBadge';
+import { CustomerLinksSection } from '@/components/CustomerLinksSection';
 import { ValidationPane } from '@/components/ValidationPane';
 import { OrdersTab } from '@/components/OrdersTab';
 import { AddSchoolModal } from '@/components/AddSchoolModal';
@@ -222,56 +223,11 @@ export default function ContactDetail() {
             </div>
 
             {/* Customer Links */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="font-display text-lg flex items-center gap-2">
-                      <Building2 className="h-5 w-5 text-customer" />
-                      Kopplingar till kunder ({customerLinks.length})
-                    </CardTitle>
-                    <CardDescription>Kunder som denna kontakt är kopplad till</CardDescription>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => setAddCustomerOpen(true)} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Lägg till kund
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {customerLinks.length === 0 ? (
-                  <p className="text-muted-foreground">Inga kopplingar</p>
-                ) : (
-                  <div className="space-y-3">
-                    {customerLinks.map((link) => (
-                      <Link
-                        key={link.id}
-                        to={`/customers/${link.customer.id}`}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-customer/10 flex items-center justify-center">
-                            {link.customer.customer_category === 'Skola' ? (
-                              <School className="h-5 w-5 text-school" />
-                            ) : (
-                              <Building2 className="h-5 w-5 text-customer" />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium">{link.customer.name}</p>
-                            <CategoryBadge category={link.customer.customer_category} />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RelationshipBadge relationshipType={link.relationship_type} />
-                          {link.is_primary && <Badge variant="outline">Primär</Badge>}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <CustomerLinksSection 
+              customerLinks={customerLinks} 
+              onAddCustomer={() => setAddCustomerOpen(true)}
+              onUpdate={fetchContactData}
+            />
 
             {/* Teacher Assignments */}
             {contact.is_teacher && (
