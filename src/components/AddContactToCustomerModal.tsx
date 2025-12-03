@@ -103,14 +103,31 @@ export function AddContactToCustomerModal({ open, onOpenChange, customerId, cust
 
     setSaving(true);
 
+    // Check if any selected contact should be primary
+    const hasPrimaryInSelection = selectedContacts.some(sc => sc.isPrimary);
+    
+    // If setting any as primary, unset existing primary contacts for this customer
+    if (hasPrimaryInSelection) {
+      await supabase
+        .from('contact_customer_links')
+        .update({ is_primary: false })
+        .eq('customer_id', customerId)
+        .eq('is_primary', true);
+    }
+
+    // Only allow one primary among selected contacts
+    let primarySet = false;
     for (const sc of selectedContacts) {
+      const shouldBePrimary = sc.isPrimary && !primarySet;
+      if (shouldBePrimary) primarySet = true;
+      
       const { data, error } = await supabase
         .from('contact_customer_links')
         .insert({
           contact_id: sc.contact.id,
           customer_id: customerId,
           relationship_type: sc.relationshipType,
-          is_primary: sc.isPrimary,
+          is_primary: shouldBePrimary,
         })
         .select()
         .single();

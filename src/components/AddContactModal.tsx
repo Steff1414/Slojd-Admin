@@ -88,6 +88,15 @@ export function AddContactModal({ open, onOpenChange, customerId, customerCatego
         return;
       }
 
+      // If setting as primary, unset other primary contacts for this customer
+      if (isPrimary) {
+        await supabase
+          .from('contact_customer_links')
+          .update({ is_primary: false })
+          .eq('customer_id', customerId)
+          .eq('is_primary', true);
+      }
+
       const { data, error } = await supabase
         .from('contact_customer_links')
         .insert({
