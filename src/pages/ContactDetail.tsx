@@ -12,6 +12,7 @@ import { OrdersTab } from '@/components/OrdersTab';
 import { AddSchoolModal } from '@/components/AddSchoolModal';
 import { AddCustomerLinkModal } from '@/components/AddCustomerLinkModal';
 import { InlineEditContact } from '@/components/InlineEditContact';
+import { RolesTab } from '@/components/RolesTab';
 import { MergeHistory } from '@/components/MergeHistory';
 import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment, Profile } from '@/types/database';
 import {
@@ -27,6 +28,7 @@ import {
   Plus,
   UserCircle,
   KeyRound,
+  Bell,
 } from 'lucide-react';
 
 export default function ContactDetail() {
@@ -187,6 +189,10 @@ export default function ContactDetail() {
         <Tabs defaultValue="info" className="space-y-6">
           <TabsList>
             <TabsTrigger value="info">Översikt</TabsTrigger>
+            <TabsTrigger value="roles" className="gap-2">
+              <Bell className="h-4 w-4" />
+              Roller
+            </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <ShoppingCart className="h-4 w-4" />
               Ordrar
@@ -334,6 +340,10 @@ export default function ContactDetail() {
 
             {/* Validation Pane - at bottom */}
             <ValidationPane items={validationItems} title="Datavalidering" />
+          </TabsContent>
+
+          <TabsContent value="roles">
+            <RolesTab customerLinks={customerLinks} onUpdate={fetchContactData} />
           </TabsContent>
 
           <TabsContent value="orders">
