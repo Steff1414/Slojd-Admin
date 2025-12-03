@@ -172,6 +172,7 @@ export type Database = {
       }
       contacts: {
         Row: {
+          consent_updated_at: string | null
           contact_type: Database["public"]["Enums"]["contact_type"] | null
           created_at: string | null
           email: string
@@ -187,8 +188,12 @@ export type Database = {
           wants_newsletter: boolean | null
           wants_personalized_offers: boolean | null
           wants_sms: boolean | null
+          web_tracking_consent:
+            | Database["public"]["Enums"]["tracking_consent"]
+            | null
         }
         Insert: {
+          consent_updated_at?: string | null
           contact_type?: Database["public"]["Enums"]["contact_type"] | null
           created_at?: string | null
           email: string
@@ -204,8 +209,12 @@ export type Database = {
           wants_newsletter?: boolean | null
           wants_personalized_offers?: boolean | null
           wants_sms?: boolean | null
+          web_tracking_consent?:
+            | Database["public"]["Enums"]["tracking_consent"]
+            | null
         }
         Update: {
+          consent_updated_at?: string | null
           contact_type?: Database["public"]["Enums"]["contact_type"] | null
           created_at?: string | null
           email?: string
@@ -221,6 +230,9 @@ export type Database = {
           wants_newsletter?: boolean | null
           wants_personalized_offers?: boolean | null
           wants_sms?: boolean | null
+          web_tracking_consent?:
+            | Database["public"]["Enums"]["tracking_consent"]
+            | null
         }
         Relationships: [
           {
@@ -285,6 +297,115 @@ export type Database = {
           },
         ]
       }
+      email_messages: {
+        Row: {
+          body: string
+          contact_id: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          related_basket_id: string | null
+          related_order_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["email_status"] | null
+          subject: string
+          template_id: string | null
+          to_email: string
+          type_key: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          contact_id: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          related_basket_id?: string | null
+          related_order_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["email_status"] | null
+          subject: string
+          template_id?: string | null
+          to_email: string
+          type_key?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          contact_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          related_basket_id?: string | null
+          related_order_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["email_status"] | null
+          subject?: string
+          template_id?: string | null
+          to_email?: string
+          type_key?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_messages_related_order_id_fkey"
+            columns: ["related_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_messages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body_template: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          subject_template: string
+          template_key: string
+          updated_at: string | null
+        }
+        Insert: {
+          body_template: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject_template: string
+          template_key: string
+          updated_at?: string | null
+        }
+        Update: {
+          body_template?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject_template?: string
+          template_key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       norce_password_sync_log: {
         Row: {
           id: string
@@ -310,6 +431,53 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          category_name: string
+          created_at: string | null
+          id: string
+          line_total: number
+          main_category: string
+          order_id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          category_name: string
+          created_at?: string | null
+          id?: string
+          line_total?: number
+          main_category: string
+          order_id: string
+          product_id: string
+          product_name: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          category_name?: string
+          created_at?: string | null
+          id?: string
+          line_total?: number
+          main_category?: string
+          order_id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -550,6 +718,88 @@ export type Database = {
         }
         Relationships: []
       }
+      web_events: {
+        Row: {
+          category_name: string | null
+          event_type: Database["public"]["Enums"]["web_event_type"]
+          id: string
+          occurred_at: string | null
+          product_id: string | null
+          product_name: string | null
+          session_id: string
+          url: string
+          visit_index: number | null
+        }
+        Insert: {
+          category_name?: string | null
+          event_type: Database["public"]["Enums"]["web_event_type"]
+          id?: string
+          occurred_at?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          session_id: string
+          url: string
+          visit_index?: number | null
+        }
+        Update: {
+          category_name?: string | null
+          event_type?: Database["public"]["Enums"]["web_event_type"]
+          id?: string
+          occurred_at?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          session_id?: string
+          url?: string
+          visit_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "web_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "web_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      web_sessions: {
+        Row: {
+          contact_id: string
+          ended_at: string | null
+          id: string
+          ip_hash: string | null
+          session_token: string
+          started_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          contact_id: string
+          ended_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          session_token: string
+          started_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          contact_id?: string
+          ended_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          session_token?: string
+          started_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "web_sessions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -583,12 +833,20 @@ export type Database = {
         | "Förening"
         | "Kommun och Region"
       customer_type_group: "B2C" | "B2B" | "B2G"
+      email_status: "QUEUED" | "SENT" | "FAILED"
       relationship_type:
         | "TeacherAtSchool"
         | "BuyerAtCompany"
         | "PrimaryContact"
         | "Employee"
         | "Other"
+      tracking_consent: "GRANTED" | "DENIED" | "UNKNOWN"
+      web_event_type:
+        | "PAGE_VIEW"
+        | "PRODUCT_VIEW"
+        | "CATEGORY_VIEW"
+        | "ADD_TO_CART"
+        | "CHECKOUT_START"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -737,12 +995,21 @@ export const Constants = {
         "Kommun och Region",
       ],
       customer_type_group: ["B2C", "B2B", "B2G"],
+      email_status: ["QUEUED", "SENT", "FAILED"],
       relationship_type: [
         "TeacherAtSchool",
         "BuyerAtCompany",
         "PrimaryContact",
         "Employee",
         "Other",
+      ],
+      tracking_consent: ["GRANTED", "DENIED", "UNKNOWN"],
+      web_event_type: [
+        "PAGE_VIEW",
+        "PRODUCT_VIEW",
+        "CATEGORY_VIEW",
+        "ADD_TO_CART",
+        "CHECKOUT_START",
       ],
     },
   },
