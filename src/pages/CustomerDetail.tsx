@@ -4,7 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CategoryBadge, TypeGroupBadge, RelationshipBadge } from '@/components/CategoryBadge';
+import { ValidationPane } from '@/components/ValidationPane';
+import { OrdersTab } from '@/components/OrdersTab';
 import { Customer, Contact, Account, Agreement, ContactCustomerLink, TeacherSchoolAssignment } from '@/types/database';
 import {
   Building2,
@@ -15,6 +18,7 @@ import {
   FileText,
   ExternalLink,
   School,
+  ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -29,6 +33,7 @@ export default function CustomerDetail() {
   const [contacts, setContacts] = useState<(ContactCustomerLink & { contact: Contact })[]>([]);
   const [teachers, setTeachers] = useState<(TeacherSchoolAssignment & { teacher: Contact })[]>([]);
   const [accounts, setAccounts] = useState<(Account & { agreement: Agreement | null })[]>([]);
+  const [validationItems, setValidationItems] = useState<{ type: 'error' | 'warning' | 'info'; message: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,8 +73,9 @@ export default function CustomerDetail() {
           setContacts((contactsData || []) as (ContactCustomerLink & { contact: Contact })[]);
 
           // Fetch teachers if school
+          let teachersData: (TeacherSchoolAssignment & { teacher: Contact })[] = [];
           if (customerData.customer_category === 'Skola') {
-            const { data: teachersData } = await supabase
+            const { data } = await supabase
               .from('teacher_school_assignments')
               .select(`
                 *,
@@ -77,7 +83,8 @@ export default function CustomerDetail() {
               `)
               .eq('school_customer_id', id)
               .eq('is_active', true);
-            setTeachers((teachersData || []) as (TeacherSchoolAssignment & { teacher: Contact })[]);
+            teachersData = (data || []) as (TeacherSchoolAssignment & { teacher: Contact })[];
+            setTeachers(teachersData);
           }
 
           // Fetch accounts
@@ -89,6 +96,23 @@ export default function CustomerDetail() {
             `)
             .eq('customer_id', id);
           setAccounts((accountsData || []) as (Account & { agreement: Agreement | null })[]);
+
+          // Compute validation items
+          const items: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
+          const hasPrimary = (contactsData || []).some((l: ContactCustomerLink) => l.is_primary);
+          if (!hasPrimary && (contactsData || []).length > 0) {
+            items.push({ type: 'warning', message: 'Ingen primär kontakt angiven' });
+          }
+          if ((contactsData || []).length === 0) {
+            items.push({ type: 'info', message: 'Inga kontakter kopplade till kunden' });
+          }
+          if (customerData.customer_category === 'Skola' && !customerData.payer_customer_id) {
+            items.push({ type: 'warning', message: 'Skolan saknar betalare (kommun)' });
+          }
+          if (customerData.customer_category === 'Skola' && teachersData.length === 0) {
+            items.push({ type: 'info', message: 'Inga lärare registrerade vid skolan' });
+          }
+          setValidationItems(items);
         }
       } catch (error) {
         console.error('Error fetching customer:', error);
@@ -158,208 +182,239 @@ export default function CustomerDetail() {
           </div>
         </div>
 
-        {/* Details Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Basic Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-display text-lg">Grunduppgifter</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">BC Kundnummer</p>
-                  <p className="font-mono font-medium">{customer.bc_customer_number}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Voyado ID</p>
-                  <p className="font-mono text-sm">{customer.voyado_id || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Norce Code</p>
-                  <p className="font-mono text-sm">{customer.norce_code || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Sitoo Kundnummer</p>
-                  <p className="font-mono text-sm">{customer.sitoo_customer_number || '-'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Validation Pane */}
+        <ValidationPane items={validationItems} />
 
-          {/* Payer Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-display text-lg flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-payer" />
-                Betalare
-              </CardTitle>
-              <CardDescription>Vem som betalar för denna kund</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {customer.payer ? (
-                <Link
-                  to={`/customers/${customer.payer.id}`}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-payer/5 hover:bg-payer/10 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-payer/10 flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-payer" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{customer.payer.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {customer.payer.bc_customer_number}
-                    </p>
-                  </div>
-                  <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
-                </Link>
-              ) : (
-                <p className="text-muted-foreground">Ingen extern betalare</p>
-              )}
+        {/* Tabs for main content */}
+        <Tabs defaultValue="info" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="info">Översikt</TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              Ordrar
+            </TabsTrigger>
+          </TabsList>
 
-              {paysFor.length > 0 && (
-                <div className="mt-6">
-                  <p className="text-sm font-medium text-muted-foreground mb-3">
-                    Betalar för ({paysFor.length})
-                  </p>
-                  <div className="space-y-2">
-                    {paysFor.map((c) => (
+          <TabsContent value="info" className="space-y-6">
+            {/* Details Grid */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Basic Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-display text-lg">Grunduppgifter</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">BC Kundnummer</p>
+                      <p className="font-mono font-medium">{customer.bc_customer_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Voyado ID</p>
+                      <p className="font-mono text-sm">{customer.voyado_id || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Norce Code</p>
+                      <p className="font-mono text-sm">{customer.norce_code || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Sitoo Kundnummer</p>
+                      <p className="font-mono text-sm">{customer.sitoo_customer_number || '-'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Payer Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-payer" />
+                    Betalare
+                  </CardTitle>
+                  <CardDescription>Vem som betalar för denna kund</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {customer.payer ? (
+                    <Link
+                      to={`/customers/${customer.payer.id}`}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-payer/5 hover:bg-payer/10 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-payer/10 flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-payer" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{customer.payer.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {customer.payer.bc_customer_number}
+                        </p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground ml-auto" />
+                    </Link>
+                  ) : (
+                    <p className="text-muted-foreground">Ingen extern betalare</p>
+                  )}
+
+                  {paysFor.length > 0 && (
+                    <div className="mt-6">
+                      <p className="text-sm font-medium text-muted-foreground mb-3">
+                        Betalar för ({paysFor.length})
+                      </p>
+                      <div className="space-y-2">
+                        {paysFor.map((c) => (
+                          <Link
+                            key={c.id}
+                            to={`/customers/${c.id}`}
+                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                          >
+                            <CategoryBadge category={c.customer_category} />
+                            <span className="font-medium">{c.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Contacts */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5 text-contact" />
+                  Kontakter ({contacts.length})
+                </CardTitle>
+                <CardDescription>Kontakter kopplade till denna kund</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {contacts.length === 0 ? (
+                  <p className="text-muted-foreground">Inga kontakter kopplade</p>
+                ) : (
+                  <div className="space-y-3">
+                    {contacts.map((link) => (
                       <Link
-                        key={c.id}
-                        to={`/customers/${c.id}`}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                        key={link.id}
+                        to={`/contacts/${link.contact.id}`}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
                       >
-                        <CategoryBadge category={c.customer_category} />
-                        <span className="font-medium">{c.name}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-contact/10 flex items-center justify-center">
+                            <Users className="h-5 w-5 text-contact" />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {link.contact.first_name} {link.contact.last_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{link.contact.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RelationshipBadge relationshipType={link.relationship_type} />
+                          {link.is_primary && <Badge variant="outline">Primär</Badge>}
+                        </div>
                       </Link>
                     ))}
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* Contacts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-lg flex items-center gap-2">
-              <Users className="h-5 w-5 text-contact" />
-              Kontakter ({contacts.length})
-            </CardTitle>
-            <CardDescription>Kontakter kopplade till denna kund</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {contacts.length === 0 ? (
-              <p className="text-muted-foreground">Inga kontakter kopplade</p>
-            ) : (
-              <div className="space-y-3">
-                {contacts.map((link) => (
-                  <Link
-                    key={link.id}
-                    to={`/contacts/${link.contact.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-contact/10 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-contact" />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {link.contact.first_name} {link.contact.last_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{link.contact.email}</p>
-                      </div>
+            {/* Teachers (if school) */}
+            {customer.customer_category === 'Skola' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5 text-teacher" />
+                    Lärare vid denna skola ({teachers.length})
+                  </CardTitle>
+                  <CardDescription>Lärare som undervisar vid skolan</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {teachers.length === 0 ? (
+                    <p className="text-muted-foreground">Inga lärare registrerade</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {teachers.map((assignment) => (
+                        <Link
+                          key={assignment.id}
+                          to={`/contacts/${assignment.teacher.id}`}
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-teacher/10 flex items-center justify-center">
+                              <GraduationCap className="h-5 w-5 text-teacher" />
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {assignment.teacher.first_name} {assignment.teacher.last_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {assignment.teacher.email}
+                              </p>
+                            </div>
+                          </div>
+                          {assignment.role && (
+                            <Badge variant="secondary">{assignment.role}</Badge>
+                          )}
+                        </Link>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <RelationshipBadge relationshipType={link.relationship_type} />
-                      {link.is_primary && <Badge variant="outline">Primär</Badge>}
-                    </div>
-                  </Link>
-                ))}
-              </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Teachers (if school) */}
-        {customer.customer_category === 'Skola' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-display text-lg flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-teacher" />
-                Lärare vid denna skola ({teachers.length})
-              </CardTitle>
-              <CardDescription>Lärare som undervisar vid skolan</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {teachers.length === 0 ? (
-                <p className="text-muted-foreground">Inga lärare registrerade</p>
-              ) : (
-                <div className="space-y-3">
-                  {teachers.map((assignment) => (
-                    <Link
-                      key={assignment.id}
-                      to={`/contacts/${assignment.teacher.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-teacher/10 flex items-center justify-center">
-                          <GraduationCap className="h-5 w-5 text-teacher" />
-                        </div>
+            {/* Accounts */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Konton & Avtal ({accounts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {accounts.length === 0 ? (
+                  <p className="text-muted-foreground">Inga konton</p>
+                ) : (
+                  <div className="space-y-3">
+                    {accounts.map((account) => (
+                      <div
+                        key={account.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                      >
                         <div>
-                          <p className="font-medium">
-                            {assignment.teacher.first_name} {assignment.teacher.last_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {assignment.teacher.email}
-                          </p>
+                          <p className="font-medium">{account.name}</p>
+                          {account.agreement && (
+                            <p className="text-sm text-muted-foreground">
+                              Avtal: {account.agreement.name}
+                            </p>
+                          )}
                         </div>
+                        {account.is_default && <Badge variant="outline">Standard</Badge>}
                       </div>
-                      {assignment.role && (
-                        <Badge variant="secondary">{assignment.role}</Badge>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Accounts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Konton & Avtal ({accounts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {accounts.length === 0 ? (
-              <p className="text-muted-foreground">Inga konton</p>
-            ) : (
-              <div className="space-y-3">
-                {accounts.map((account) => (
-                  <div
-                    key={account.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div>
-                      <p className="font-medium">{account.name}</p>
-                      {account.agreement && (
-                        <p className="text-sm text-muted-foreground">
-                          Avtal: {account.agreement.name}
-                        </p>
-                      )}
-                    </div>
-                    {account.is_default && <Badge variant="outline">Standard</Badge>}
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  Ordrar
+                </CardTitle>
+                <CardDescription>Orderhistorik för denna kund</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OrdersTab customerId={id} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

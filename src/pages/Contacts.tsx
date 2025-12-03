@@ -7,7 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ContactTypeBadge } from '@/components/CategoryBadge';
 import { Badge } from '@/components/ui/badge';
 import { Contact } from '@/types/database';
-import { Search, Users, GraduationCap, Mail, Phone } from 'lucide-react';
+import { Search, Users, GraduationCap, Mail, Phone, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -52,11 +53,19 @@ export default function Contacts() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Kontakter</h1>
-          <p className="text-muted-foreground mt-1">
-            Alla kontakter i systemet
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-foreground">Kontakter</h1>
+            <p className="text-muted-foreground mt-1">
+              Alla kontakter i systemet
+            </p>
+          </div>
+          <Link to="/contacts/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Ny kontakt
+            </Button>
+          </Link>
         </div>
 
         {/* Search */}
