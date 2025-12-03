@@ -32,9 +32,11 @@ const contactSchema = z.object({
 interface InlineEditContactProps {
   contact: Contact;
   onUpdate: () => void;
+  roleCount?: number; // Number of customer links - hide preferences if > 1
 }
 
-export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps) {
+export function InlineEditContact({ contact, onUpdate, roleCount = 0 }: InlineEditContactProps) {
+  const showPreferences = roleCount <= 1;
   const { toast } = useToast();
   const { logAction } = useAuditLog();
   const [editing, setEditing] = useState(false);
@@ -162,33 +164,35 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
             <p className="text-sm text-muted-foreground mb-1">Voyado ID</p>
             <p className="font-mono text-sm">{contact.voyado_id}</p>
           </div>
-          {/* Kommunikationspreferenser */}
-          <div className="pt-4 border-t border-border">
-            <div className="flex items-center gap-2 mb-3">
-              <Bell className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm font-medium">Kommunikationspreferenser</p>
+          {/* Kommunikationspreferenser - only show if 0-1 roles */}
+          {showPreferences && (
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium">Kommunikationspreferenser</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={contact.wants_sms ?? false} disabled />
+                  <span className={contact.wants_sms ? '' : 'text-muted-foreground'}>
+                    Vill få SMS med erbjudanden
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={contact.wants_newsletter ?? false} disabled />
+                  <span className={contact.wants_newsletter ? '' : 'text-muted-foreground'}>
+                    Vill få e-post med nyhetsbrev
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={contact.wants_personalized_offers ?? false} disabled />
+                  <span className={contact.wants_personalized_offers ? '' : 'text-muted-foreground'}>
+                    Vill få personaliserade erbjudanden baserat på köphistorik
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Checkbox checked={contact.wants_sms ?? false} disabled />
-                <span className={contact.wants_sms ? '' : 'text-muted-foreground'}>
-                  Vill få SMS med erbjudanden
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={contact.wants_newsletter ?? false} disabled />
-                <span className={contact.wants_newsletter ? '' : 'text-muted-foreground'}>
-                  Vill få e-post med nyhetsbrev
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={contact.wants_personalized_offers ?? false} disabled />
-                <span className={contact.wants_personalized_offers ? '' : 'text-muted-foreground'}>
-                  Vill få personaliserade erbjudanden baserat på köphistorik
-                </span>
-              </div>
-            </div>
-          </div>
+          )}
           {contact.notes && (
             <div className="pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground mb-1">Anteckningar</p>
@@ -292,36 +296,38 @@ export function InlineEditContact({ contact, onUpdate }: InlineEditContactProps)
           <Label htmlFor="is_teacher">Är lärare</Label>
         </div>
         
-        {/* Kommunikationspreferenser */}
-        <div className="pt-4 border-t border-border">
-          <div className="flex items-center gap-2 mb-3">
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <Label className="font-medium">Kommunikationspreferenser</Label>
+        {/* Kommunikationspreferenser - only show if 0-1 roles */}
+        {showPreferences && (
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <Label className="font-medium">Kommunikationspreferenser</Label>
+            </div>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox
+                  checked={form.wants_sms}
+                  onCheckedChange={(checked) => setForm({ ...form, wants_sms: checked as boolean })}
+                />
+                <span className="text-sm">Vill få SMS med erbjudanden</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox
+                  checked={form.wants_newsletter}
+                  onCheckedChange={(checked) => setForm({ ...form, wants_newsletter: checked as boolean })}
+                />
+                <span className="text-sm">Vill få e-post med nyhetsbrev</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox
+                  checked={form.wants_personalized_offers}
+                  onCheckedChange={(checked) => setForm({ ...form, wants_personalized_offers: checked as boolean })}
+                />
+                <span className="text-sm">Vill få personaliserade erbjudanden baserat på köphistorik</span>
+              </label>
+            </div>
           </div>
-          <div className="space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox
-                checked={form.wants_sms}
-                onCheckedChange={(checked) => setForm({ ...form, wants_sms: checked as boolean })}
-              />
-              <span className="text-sm">Vill få SMS med erbjudanden</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox
-                checked={form.wants_newsletter}
-                onCheckedChange={(checked) => setForm({ ...form, wants_newsletter: checked as boolean })}
-              />
-              <span className="text-sm">Vill få e-post med nyhetsbrev</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox
-                checked={form.wants_personalized_offers}
-                onCheckedChange={(checked) => setForm({ ...form, wants_personalized_offers: checked as boolean })}
-              />
-              <span className="text-sm">Vill få personaliserade erbjudanden baserat på köphistorik</span>
-            </label>
-          </div>
-        </div>
+        )}
         
         <div className="space-y-2">
           <Label htmlFor="notes">Anteckningar</Label>

@@ -202,7 +202,7 @@ export default function ContactDetail() {
             {/* Details Grid */}
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Basic Info with Inline Edit */}
-              <InlineEditContact contact={contact} onUpdate={fetchContactData} />
+              <InlineEditContact contact={contact} onUpdate={fetchContactData} roleCount={customerLinks.length} />
 
               {/* Customer Links */}
               <Card>
@@ -315,8 +315,8 @@ export default function ContactDetail() {
               />
             )}
 
-            {/* Role Preferences Overview */}
-            <RolePreferencesOverview customerLinks={customerLinks} />
+            {/* Role Preferences Overview - only show if multiple roles */}
+            {customerLinks.length > 1 && <RolePreferencesOverview customerLinks={customerLinks} />}
 
             {/* Validation Pane - at bottom */}
             <ValidationPane items={validationItems} title="Datavalidering" />
