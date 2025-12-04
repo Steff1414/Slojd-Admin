@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
-import { ShoppingCart, User, ChevronDown, ChevronUp, Package, Truck } from 'lucide-react';
+import { ShoppingCart, User, ChevronDown, ChevronUp, Package, Truck, ExternalLink, Check, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ShipmentStatus, SHIPMENT_STATUS_LABELS } from '@/types/cases';
 
 interface OrderItem {
   id: string;
@@ -18,6 +20,16 @@ interface OrderItem {
   line_total: number;
 }
 
+interface Shipment {
+  id: string;
+  carrier: string;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  status: ShipmentStatus;
+  shipped_at: string | null;
+  delivered_at: string | null;
+}
+
 interface Order {
   id: string;
   order_number: string;
@@ -26,6 +38,7 @@ interface Order {
   created_at: string;
   customer?: { name: string };
   buyer_contact?: { id: string; first_name: string; last_name: string } | null;
+  shipment?: Shipment | null;
 }
 
 interface OrdersTabProps {
@@ -65,7 +78,30 @@ export function OrdersTab({ customerId, contactId, accountId, showBuyer = false 
       }
 
       const { data } = await query.limit(20);
-      setOrders((data || []) as Order[]);
+      
+      // Fetch shipments for these orders
+      if (data && data.length > 0) {
+        const orderIds = data.map(o => o.id);
+        const { data: shipments } = await supabase
+          .from('shipments')
+          .select('*')
+          .in('order_id', orderIds);
+        
+        const shipmentsByOrder = (shipments || []).reduce((acc, s) => {
+          acc[s.order_id] = s;
+          return acc;
+        }, {} as Record<string, Shipment>);
+        
+        const ordersWithShipments = data.map(order => ({
+          ...order,
+          shipment: shipmentsByOrder[order.id] || null
+        }));
+        
+        setOrders(ordersWithShipments as Order[]);
+      } else {
+        setOrders([]);
+      }
+      
       setLoading(false);
     }
 
@@ -128,12 +164,36 @@ export function OrdersTab({ customerId, contactId, accountId, showBuyer = false 
     );
   }
 
+  const getStatusBadge = (status: ShipmentStatus) => {
+    const variants: Record<ShipmentStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+      DELIVERED: 'default',
+      IN_TRANSIT: 'secondary',
+      CREATED: 'outline',
+      FAILED: 'destructive',
+    };
+    return <Badge variant={variants[status]} className="text-xs">{SHIPMENT_STATUS_LABELS[status]}</Badge>;
+  };
+
+  const getStatusIcon = (status: ShipmentStatus) => {
+    switch (status) {
+      case 'DELIVERED':
+        return <Check className="h-3 w-3 text-green-500" />;
+      case 'IN_TRANSIT':
+        return <Truck className="h-3 w-3 text-blue-500" />;
+      case 'FAILED':
+        return <AlertTriangle className="h-3 w-3 text-destructive" />;
+      default:
+        return <Package className="h-3 w-3 text-muted-foreground" />;
+    }
+  };
+
   return (
     <div className="space-y-3">
       {orders.map((order) => {
         const isExpanded = expandedOrders.has(order.id);
         const isLoadingItems = loadingItems.has(order.id);
         const items = orderItems[order.id] || [];
+        const shipment = order.shipment;
         
         return (
           <div
@@ -162,7 +222,26 @@ export function OrdersTab({ customerId, contactId, accountId, showBuyer = false 
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
+                {/* Shipment Status */}
+                {shipment && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {getStatusIcon(shipment.status)}
+                    <span className="text-muted-foreground">{shipment.carrier}</span>
+                    {getStatusBadge(shipment.status)}
+                    {shipment.tracking_url && (
+                      <a
+                        href={shipment.tracking_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-primary hover:text-primary/80"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
                 <div className="text-right">
                   <p className="font-semibold">{formatCurrency(order.total_amount)}</p>
                   <Badge variant={order.status === 'completed' ? 'success' : 'secondary'}>
@@ -234,6 +313,48 @@ export function OrdersTab({ customerId, contactId, accountId, showBuyer = false 
                       <p className="font-medium text-muted-foreground">Totalt</p>
                       <p className="font-bold text-lg">{formatCurrency(order.total_amount)}</p>
                     </div>
+                  </div>
+                )}
+                
+                {/* Shipment details when expanded */}
+                {shipment && (
+                  <div className="mt-4 p-3 rounded-lg bg-background border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Truck className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="font-medium text-sm">Leverans via {shipment.carrier}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {shipment.tracking_number}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {getStatusBadge(shipment.status)}
+                        {shipment.shipped_at && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Skickad: {format(new Date(shipment.shipped_at), 'd MMM', { locale: sv })}
+                          </p>
+                        )}
+                        {shipment.delivered_at && (
+                          <p className="text-xs text-muted-foreground">
+                            Levererad: {format(new Date(shipment.delivered_at), 'd MMM', { locale: sv })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {shipment.tracking_url && (
+                      <a
+                        href={shipment.tracking_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 mt-2 text-sm text-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Spåra paket
+                      </a>
+                    )}
                   </div>
                 )}
                 
