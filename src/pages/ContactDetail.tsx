@@ -20,6 +20,9 @@ import { MergeHistory } from '@/components/MergeHistory';
 import { CommunicationTab } from '@/components/CommunicationTab';
 import { WebActivityTab } from '@/components/WebActivityTab';
 import { CategoryAffinityPanel } from '@/components/CategoryAffinityPanel';
+import { LatestCasesPanel } from '@/components/LatestCasesPanel';
+import { LatestShipmentPanel } from '@/components/LatestShipmentPanel';
+import { CasesTab } from '@/components/CasesTab';
 import { Contact, Customer, ContactCustomerLink, TeacherSchoolAssignment, Profile } from '@/types/database';
 import {
   Users,
@@ -34,6 +37,7 @@ import {
   KeyRound,
   Mail,
   Globe,
+  Ticket,
 } from 'lucide-react';
 
 export default function ContactDetail() {
@@ -206,6 +210,10 @@ export default function ContactDetail() {
               <Mail className="h-4 w-4" />
               Kommunikation
             </TabsTrigger>
+            <TabsTrigger value="cases" className="gap-2">
+              <Ticket className="h-4 w-4" />
+              Ärenden
+            </TabsTrigger>
             <TabsTrigger value="webactivity" className="gap-2">
               <Globe className="h-4 w-4" />
               Webbaktivitet
@@ -220,6 +228,16 @@ export default function ContactDetail() {
 
               {/* Category Affinity Panel */}
               <CategoryAffinityPanel contactId={id!} />
+            </div>
+
+            {/* Cases and Shipments Row */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              <LatestCasesPanel 
+                contact={contact} 
+                customerId={customerLinks.length > 0 ? customerLinks[0].customer_id : null}
+                onUpdate={fetchContactData}
+              />
+              <LatestShipmentPanel contact={contact} />
             </div>
 
             {/* Customer Links */}
@@ -315,6 +333,10 @@ export default function ContactDetail() {
 
           <TabsContent value="communication">
             <CommunicationTab contact={contact} onUpdate={fetchContactData} />
+          </TabsContent>
+
+          <TabsContent value="cases">
+            <CasesTab contact={contact} onUpdate={fetchContactData} />
           </TabsContent>
 
           <TabsContent value="webactivity">

@@ -119,6 +119,124 @@ export type Database = {
         }
         Relationships: []
       }
+      case_messages: {
+        Row: {
+          author_user_id: string | null
+          body: string
+          case_id: string
+          created_at: string
+          direction: Database["public"]["Enums"]["case_message_direction"]
+          email_message_id: string | null
+          id: string
+          message_type: Database["public"]["Enums"]["case_message_type"]
+        }
+        Insert: {
+          author_user_id?: string | null
+          body: string
+          case_id: string
+          created_at?: string
+          direction: Database["public"]["Enums"]["case_message_direction"]
+          email_message_id?: string | null
+          id?: string
+          message_type?: Database["public"]["Enums"]["case_message_type"]
+        }
+        Update: {
+          author_user_id?: string | null
+          body?: string
+          case_id?: string
+          created_at?: string
+          direction?: Database["public"]["Enums"]["case_message_direction"]
+          email_message_id?: string | null
+          id?: string
+          message_type?: Database["public"]["Enums"]["case_message_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_messages_email_message_id_fkey"
+            columns: ["email_message_id"]
+            isOneToOne: false
+            referencedRelation: "email_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          channel: Database["public"]["Enums"]["case_channel"]
+          closed_at: string | null
+          contact_id: string
+          created_at: string
+          created_by_user_id: string | null
+          customer_id: string | null
+          description: string | null
+          id: string
+          order_id: string | null
+          priority: Database["public"]["Enums"]["case_priority"] | null
+          status: Database["public"]["Enums"]["case_status"]
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["case_channel"]
+          closed_at?: string | null
+          contact_id: string
+          created_at?: string
+          created_by_user_id?: string | null
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          priority?: Database["public"]["Enums"]["case_priority"] | null
+          status?: Database["public"]["Enums"]["case_status"]
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["case_channel"]
+          closed_at?: string | null
+          contact_id?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          priority?: Database["public"]["Enums"]["case_priority"] | null
+          status?: Database["public"]["Enums"]["case_status"]
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cases_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_customer_links: {
         Row: {
           contact_id: string
@@ -681,6 +799,56 @@ export type Database = {
           },
         ]
       }
+      shipments: {
+        Row: {
+          carrier: string
+          created_at: string
+          delivered_at: string | null
+          id: string
+          order_id: string
+          shipment_number: string
+          shipped_at: string | null
+          status: Database["public"]["Enums"]["shipment_status"]
+          tracking_number: string | null
+          tracking_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          order_id: string
+          shipment_number: string
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"]
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          order_id?: string
+          shipment_number?: string
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"]
+          tracking_number?: string | null
+          tracking_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_school_assignments: {
         Row: {
           created_at: string | null
@@ -884,6 +1052,11 @@ export type Database = {
     Enums: {
       address_type: "BILLING" | "DELIVERY" | "ALTERNATIVE_DELIVERY"
       app_role: "admin" | "moderator" | "user"
+      case_channel: "EMAIL" | "PHONE" | "CHAT" | "OTHER"
+      case_message_direction: "INBOUND" | "OUTBOUND" | "INTERNAL_NOTE"
+      case_message_type: "EMAIL" | "PHONE_CALL" | "NOTE" | "OTHER"
+      case_priority: "LOW" | "NORMAL" | "HIGH"
+      case_status: "OPEN" | "PENDING" | "RESOLVED" | "CLOSED"
       contact_type:
         | "Medlem"
         | "Nyhetsbrev"
@@ -920,6 +1093,7 @@ export type Database = {
         | "PrimaryContact"
         | "Employee"
         | "Other"
+      shipment_status: "CREATED" | "IN_TRANSIT" | "DELIVERED" | "FAILED"
       tracking_consent: "GRANTED" | "DENIED" | "UNKNOWN"
       web_event_type:
         | "PAGE_VIEW"
@@ -1056,6 +1230,11 @@ export const Constants = {
     Enums: {
       address_type: ["BILLING", "DELIVERY", "ALTERNATIVE_DELIVERY"],
       app_role: ["admin", "moderator", "user"],
+      case_channel: ["EMAIL", "PHONE", "CHAT", "OTHER"],
+      case_message_direction: ["INBOUND", "OUTBOUND", "INTERNAL_NOTE"],
+      case_message_type: ["EMAIL", "PHONE_CALL", "NOTE", "OTHER"],
+      case_priority: ["LOW", "NORMAL", "HIGH"],
+      case_status: ["OPEN", "PENDING", "RESOLVED", "CLOSED"],
       contact_type: [
         "Medlem",
         "Nyhetsbrev",
@@ -1096,6 +1275,7 @@ export const Constants = {
         "Employee",
         "Other",
       ],
+      shipment_status: ["CREATED", "IN_TRANSIT", "DELIVERED", "FAILED"],
       tracking_consent: ["GRANTED", "DENIED", "UNKNOWN"],
       web_event_type: [
         "PAGE_VIEW",
