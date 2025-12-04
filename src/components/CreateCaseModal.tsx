@@ -185,12 +185,12 @@ export function CreateCaseModal({
           {orders.length > 0 && (
             <div className="space-y-2">
               <Label>Relaterad order (valfritt)</Label>
-              <Select value={orderId} onValueChange={setOrderId}>
+              <Select value={orderId || "_none"} onValueChange={(v) => setOrderId(v === "_none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Välj order..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Ingen order</SelectItem>
+                  <SelectItem value="_none">Ingen order</SelectItem>
                   {orders.map((order) => (
                     <SelectItem key={order.id} value={order.id}>
                       #{order.order_number} - {order.total_amount.toFixed(2)} kr
