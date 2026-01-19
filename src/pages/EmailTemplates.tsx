@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -479,7 +480,7 @@ export default function EmailTemplates() {
                   <Label className="text-sm text-muted-foreground">Innehåll</Label>
                   <div 
                     className="p-4 bg-background border rounded-lg prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: resolvePlaceholders(selectedTemplate.body_template) }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resolvePlaceholders(selectedTemplate.body_template)) }}
                   />
                 </div>
               </div>

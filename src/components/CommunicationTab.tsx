@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -172,7 +173,7 @@ export function CommunicationTab({ contact, onUpdate }: CommunicationTabProps) {
                         <p className="text-sm font-medium text-muted-foreground mb-1">Innehåll</p>
                         <div 
                           className="text-sm bg-background p-3 rounded border prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: email.body }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(email.body) }}
                         />
                       </div>
                       {email.error_message && (
