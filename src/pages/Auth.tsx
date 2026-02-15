@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { lovable } from '@/integrations/lovable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +49,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
-  const { signIn, signUp, signInWithGoogle, resetPasswordForEmail } = useAuth();
+  const { signIn, signUp, resetPasswordForEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -104,11 +105,12 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        toast.error(error.message);
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(result.error.message || 'Kunde inte starta Google-inloggning');
       }
-      // Vid lyckad OAuth redirectar Supabase användaren till Google, ingen navigate behövs
     } finally {
       setLoading(false);
     }
