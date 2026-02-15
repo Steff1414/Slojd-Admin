@@ -33,7 +33,7 @@ async function queryNorce<T>(
 export async function fetchNorceProducts(
   params?: NorceQueryParams,
 ): Promise<NorceODataResponse<NorceProduct>> {
-  return queryNorce<NorceProduct>('Products', {
+  return queryNorce<NorceProduct>('Products/Products', {
     $top: 50,
     $orderby: 'Name',
     ...params,
@@ -43,7 +43,7 @@ export async function fetchNorceProducts(
 export async function fetchNorceOrders(
   params?: NorceQueryParams,
 ): Promise<NorceODataResponse<NorceOrder>> {
-  return queryNorce<NorceOrder>('Orders', {
+  return queryNorce<NorceOrder>('Orders/Orders', {
     $top: 50,
     $orderby: 'OrderDate desc',
     ...params,
@@ -53,7 +53,7 @@ export async function fetchNorceOrders(
 export async function fetchNorceCustomers(
   params?: NorceQueryParams,
 ): Promise<NorceODataResponse<NorceCustomer>> {
-  return queryNorce<NorceCustomer>('Customers', {
+  return queryNorce<NorceCustomer>('Customers/Customers', {
     $top: 50,
     $orderby: 'Name',
     ...params,
@@ -63,7 +63,7 @@ export async function fetchNorceCustomers(
 export async function fetchNorceCategories(
   params?: NorceQueryParams,
 ): Promise<NorceODataResponse<NorceCategory>> {
-  return queryNorce<NorceCategory>('Categories', {
+  return queryNorce<NorceCategory>('Products/Categories', {
     $top: 100,
     $orderby: 'Name',
     ...params,

@@ -37,10 +37,13 @@ async function getNorceToken(): Promise<string> {
   })
 
   if (!res.ok) {
-    throw new Error(`Norce token request failed: ${res.status}`)
+    const errText = await res.text()
+    console.error('Token request failed:', res.status, errText)
+    throw new Error(`Norce token request failed: ${res.status} - ${errText}`)
   }
 
   const data = await res.json()
+  console.log('Token obtained, expires_in:', data.expires_in)
   cachedToken = data.access_token
   tokenExpiresAt = now + (data.expires_in * 1000)
   return cachedToken!
@@ -84,17 +87,21 @@ Deno.serve(async (req) => {
     }
 
     // Build OData URL with query parameters
-    const url = new URL(`${NORCE_QUERY_BASE}/${endpoint}`)
+    // OData requires literal $-prefixed params, so build query string manually
+    let queryString = ''
     if (params) {
+      const parts: string[] = []
       for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== null && value !== '') {
-          url.searchParams.set(key, String(value))
+          parts.push(`${key}=${encodeURIComponent(String(value))}`)
         }
       }
+      if (parts.length) queryString = '?' + parts.join('&')
     }
+    const fullUrl = `${NORCE_QUERY_BASE}/${endpoint}${queryString}`
 
     const token = await getNorceToken()
-
+    console.log('Calling Norce URL:', fullUrl)
     const norceHeaders: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
@@ -103,7 +110,7 @@ Deno.serve(async (req) => {
       norceHeaders['application-id'] = String(applicationId)
     }
 
-    const norceRes = await fetch(url.toString(), { headers: norceHeaders })
+    const norceRes = await fetch(fullUrl, { headers: norceHeaders })
 
     if (!norceRes.ok) {
       const errorText = await norceRes.text()
@@ -114,7 +121,7 @@ Deno.serve(async (req) => {
         tokenExpiresAt = 0
         const retryToken = await getNorceToken()
         norceHeaders['Authorization'] = `Bearer ${retryToken}`
-        const retryRes = await fetch(url.toString(), { headers: norceHeaders })
+        const retryRes = await fetch(fullUrl, { headers: norceHeaders })
         if (retryRes.ok) {
           const data = await retryRes.json()
           return new Response(JSON.stringify(data), {
