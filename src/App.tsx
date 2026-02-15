@@ -27,6 +27,7 @@ import Payers from "./pages/Payers";
 import EmailTemplates from "./pages/EmailTemplates";
 import Account from "./pages/Account";
 import AllowedEmails from "./pages/AllowedEmails";
+import Norce from "./pages/Norce";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +78,7 @@ function AppRoutes() {
       <Route path="/email-templates" element={<ProtectedRoute><EmailTemplates /></ProtectedRoute>} />
       <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
       <Route path="/allowed-emails" element={<ProtectedRoute><AllowedEmails /></ProtectedRoute>} />
+      <Route path="/norce" element={<ProtectedRoute><Norce /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

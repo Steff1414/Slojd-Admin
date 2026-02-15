@@ -21,6 +21,7 @@ import {
   Landmark,
   Settings,
   ShieldCheck,
+  Store,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -44,6 +45,7 @@ const navItems = [
   { href: '/audit-log', label: 'Ändringslogg', icon: History },
   { href: '/merge-contacts', label: 'Slå samman', icon: Merge },
   { href: '/api-docs', label: 'API Docs', icon: FileText },
+  { href: '/norce', label: 'Norce Commerce', icon: Store },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
