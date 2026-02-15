@@ -11,7 +11,16 @@ export default function Index() {
       if (user) {
         navigate('/dashboard');
       } else {
-        navigate('/auth');
+        const hash = window.location.hash?.slice(1);
+        const params = hash ? Object.fromEntries(new URLSearchParams(hash)) : {};
+        const errorDesc = params.error_description || params.error;
+        if (errorDesc) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        navigate('/auth', {
+          replace: true,
+          state: errorDesc ? { message: `Inloggning misslyckades: ${errorDesc}` } : {},
+        });
       }
     }
   }, [user, loading, navigate]);
