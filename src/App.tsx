@@ -25,6 +25,7 @@ import OrganisationGraph from "./pages/OrganisationGraph";
 import Schools from "./pages/Schools";
 import Payers from "./pages/Payers";
 import EmailTemplates from "./pages/EmailTemplates";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ function AppRoutes() {
       <Route path="/import" element={<ProtectedRoute><ImportCenter /></ProtectedRoute>} />
       <Route path="/organisation-graph" element={<ProtectedRoute><OrganisationGraph /></ProtectedRoute>} />
       <Route path="/email-templates" element={<ProtectedRoute><EmailTemplates /></ProtectedRoute>} />
+      <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
