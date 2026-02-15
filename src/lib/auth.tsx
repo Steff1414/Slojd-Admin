@@ -22,20 +22,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const checkAllowed = async (email: string): Promise<boolean> => {
+      const { data } = await supabase
+        .from('allowed_emails')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
+      return !!data;
+    };
+
+    const handleSession = async (session: Session | null) => {
+      if (session?.user?.email) {
+        const allowed = await checkAllowed(session.user.email);
+        if (!allowed) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        if (event === 'SIGNED_IN') {
+          handleSession(session);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      handleSession(session);
     });
 
     return () => subscription.unsubscribe();

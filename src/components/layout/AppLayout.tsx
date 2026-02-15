@@ -20,10 +20,12 @@ import {
   School,
   Landmark,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { GlobalSearch } from '@/components/GlobalSearch';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -46,6 +48,7 @@ const navItems = [
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -114,6 +117,22 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               );
             })}
+
+            {isAdmin && (
+              <Link
+                to="/allowed-emails"
+                onClick={() => setSidebarOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  location.pathname === '/allowed-emails'
+                    ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                )}
+              >
+                <ShieldCheck className="h-5 w-5" />
+                Godkända e-poster
+              </Link>
+            )}
           </nav>
 
           {/* User section */}

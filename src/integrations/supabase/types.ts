@@ -86,6 +86,30 @@ export type Database = {
         }
         Relationships: []
       }
+      allowed_emails: {
+        Row: {
+          added_by: string | null
+          created_at: string | null
+          email: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

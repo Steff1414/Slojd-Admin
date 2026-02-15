@@ -26,6 +26,7 @@ import Schools from "./pages/Schools";
 import Payers from "./pages/Payers";
 import EmailTemplates from "./pages/EmailTemplates";
 import Account from "./pages/Account";
+import AllowedEmails from "./pages/AllowedEmails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ function AppRoutes() {
       <Route path="/organisation-graph" element={<ProtectedRoute><OrganisationGraph /></ProtectedRoute>} />
       <Route path="/email-templates" element={<ProtectedRoute><EmailTemplates /></ProtectedRoute>} />
       <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+      <Route path="/allowed-emails" element={<ProtectedRoute><AllowedEmails /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
