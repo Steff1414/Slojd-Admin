@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +50,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
-  const { signIn, signUp, resetPasswordForEmail } = useAuth();
+  const { signIn, signUp, signOut, resetPasswordForEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -62,6 +63,15 @@ export default function Auth() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
+
+  const checkAllowedEmail = async (userEmail: string): Promise<boolean> => {
+    const { data } = await supabase
+      .from('allowed_emails')
+      .select('id')
+      .eq('email', userEmail.toLowerCase())
+      .maybeSingle();
+    return !!data;
+  };
 
   const handleSubmit = async (mode: 'signin' | 'signup') => {
     const validation = authSchema.safeParse({ email, password });
@@ -81,6 +91,12 @@ export default function Auth() {
             toast.error(error.message);
           }
         } else {
+          const allowed = await checkAllowedEmail(email);
+          if (!allowed) {
+            await signOut();
+            toast.error('Din e-postadress är inte godkänd för inloggning. Kontakta en administratör.');
+            return;
+          }
           toast.success('Inloggad!');
           navigate('/dashboard');
         }
@@ -93,6 +109,12 @@ export default function Auth() {
             toast.error(error.message);
           }
         } else {
+          const allowed = await checkAllowedEmail(email);
+          if (!allowed) {
+            await signOut();
+            toast.error('Din e-postadress är inte godkänd för inloggning. Kontakta en administratör.');
+            return;
+          }
           toast.success('Konto skapat! Du är nu inloggad.');
           navigate('/dashboard');
         }
@@ -111,6 +133,7 @@ export default function Auth() {
       if (result.error) {
         toast.error(result.error.message || 'Kunde inte starta Google-inloggning');
       }
+      // Note: After Google OAuth redirect, the email check happens in the auth state listener
     } finally {
       setLoading(false);
     }
