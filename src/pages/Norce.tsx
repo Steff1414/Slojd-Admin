@@ -10,7 +10,6 @@ import {
   Package,
   ShoppingCart,
   Users,
-  FolderTree,
   RefreshCw,
   Store,
   AlertCircle,
@@ -21,17 +20,12 @@ import {
   fetchNorceProducts,
   fetchNorceOrders,
   fetchNorceCustomers,
-  fetchNorceCategories,
 } from '@/integrations/norce';
 import type {
   NorceProduct,
   NorceOrder,
   NorceCustomer,
-  NorceCategory,
 } from '@/types/norce';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK' }).format(amount);
 
 const formatDate = (dateStr?: string) => {
   if (!dateStr) return '-';
@@ -81,20 +75,11 @@ export default function Norce() {
   const [customersFetched, setCustomersFetched] = useState(false);
   const [customersSearch, setCustomersSearch] = useState('');
 
-  // Categories
-  const [categories, setCategories] = useState<NorceCategory[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
-  const [categoriesFetched, setCategoriesFetched] = useState(false);
-  const [categoriesSearch, setCategoriesSearch] = useState('');
-
-  // Lazy-load data on tab activation
   useEffect(() => {
     if (activeTab === 'products' && !productsFetched) loadProducts();
     if (activeTab === 'orders' && !ordersFetched) loadOrders();
     if (activeTab === 'customers' && !customersFetched) loadCustomers();
-    if (activeTab === 'categories' && !categoriesFetched) loadCategories();
-  }, [activeTab, productsFetched, ordersFetched, customersFetched, categoriesFetched]);
+  }, [activeTab, productsFetched, ordersFetched, customersFetched]);
 
   async function loadProducts() {
     setProductsLoading(true);
@@ -138,29 +123,14 @@ export default function Norce() {
     }
   }
 
-  async function loadCategories() {
-    setCategoriesLoading(true);
-    setCategoriesError(null);
-    try {
-      const res = await fetchNorceCategories();
-      setCategories(res.value || []);
-      setCategoriesFetched(true);
-    } catch (e) {
-      setCategoriesError(e instanceof Error ? e.message : 'Okänt fel');
-    } finally {
-      setCategoriesLoading(false);
-    }
-  }
-
-  // Client-side filtering
   const filteredProducts = useMemo(() => {
     if (!productsSearch) return products;
     const q = productsSearch.toLowerCase();
     return products.filter(
       (p) =>
-        p.Name?.toLowerCase().includes(q) ||
-        p.Code?.toLowerCase().includes(q) ||
-        p.CategoryName?.toLowerCase().includes(q),
+        p.DefaultName?.toLowerCase().includes(q) ||
+        p.ManufacturerPartNo?.toLowerCase().includes(q) ||
+        p.Alias?.toLowerCase().includes(q),
     );
   }, [products, productsSearch]);
 
@@ -170,7 +140,7 @@ export default function Norce() {
     return orders.filter(
       (o) =>
         o.OrderNo?.toLowerCase().includes(q) ||
-        o.CustomerName?.toLowerCase().includes(q),
+        o.Source?.toLowerCase().includes(q),
     );
   }, [orders, ordersSearch]);
 
@@ -179,22 +149,12 @@ export default function Norce() {
     const q = customersSearch.toLowerCase();
     return customers.filter(
       (c) =>
-        c.Name?.toLowerCase().includes(q) ||
-        c.Code?.toLowerCase().includes(q) ||
-        c.Email?.toLowerCase().includes(q) ||
-        c.OrgNo?.toLowerCase().includes(q),
+        c.FirstName?.toLowerCase().includes(q) ||
+        c.LastName?.toLowerCase().includes(q) ||
+        c.EmailAddress?.toLowerCase().includes(q) ||
+        c.CustomerCode?.toLowerCase().includes(q),
     );
   }, [customers, customersSearch]);
-
-  const filteredCategories = useMemo(() => {
-    if (!categoriesSearch) return categories;
-    const q = categoriesSearch.toLowerCase();
-    return categories.filter(
-      (c) =>
-        c.Name?.toLowerCase().includes(q) ||
-        c.Code?.toLowerCase().includes(q),
-    );
-  }, [categories, categoriesSearch]);
 
   return (
     <AppLayout>
@@ -225,9 +185,6 @@ export default function Norce() {
             <TabsTrigger value="customers" className="gap-2">
               <Users className="h-4 w-4" /> Kunder
             </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2">
-              <FolderTree className="h-4 w-4" /> Kategorier
-            </TabsTrigger>
           </TabsList>
 
           {/* ─── Products ─── */}
@@ -236,7 +193,7 @@ export default function Norce() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Sök på namn, artikelnr eller kategori..."
+                  placeholder="Sök på namn eller artikelnr..."
                   value={productsSearch}
                   onChange={(e) => setProductsSearch(e.target.value)}
                   className="pl-10"
@@ -270,28 +227,26 @@ export default function Norce() {
                           <tr>
                             <th>Namn</th>
                             <th>Artikelnr</th>
-                            <th>Kategori</th>
-                            <th>Status</th>
-                            <th>Skapad</th>
+                            <th>Variant</th>
+                            <th>ID</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredProducts.map((product) => (
-                            <tr key={product.ProductId}>
-                              <td className="font-medium">{product.Name}</td>
-                              <td className="font-mono text-sm text-muted-foreground">
-                                {product.Code}
+                            <tr key={product.Id}>
+                              <td className="font-medium">
+                                {product.DefaultName}
                               </td>
-                              <td className="text-muted-foreground">
-                                {product.CategoryName || '-'}
+                              <td className="font-mono text-sm text-muted-foreground">
+                                {product.ManufacturerPartNo || '-'}
                               </td>
                               <td>
-                                <Badge variant={product.IsActive ? 'default' : 'secondary'}>
-                                  {product.IsActive ? 'Aktiv' : 'Inaktiv'}
+                                <Badge variant={product.IsVariant ? 'default' : 'secondary'}>
+                                  {product.IsVariant ? 'Variant' : 'Standard'}
                                 </Badge>
                               </td>
                               <td className="text-muted-foreground text-sm">
-                                {formatDate(product.Created)}
+                                {product.Id}
                               </td>
                             </tr>
                           ))}
@@ -315,7 +270,7 @@ export default function Norce() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Sök på ordernr eller kund..."
+                  placeholder="Sök på ordernr eller källa..."
                   value={ordersSearch}
                   onChange={(e) => setOrdersSearch(e.target.value)}
                   className="pl-10"
@@ -349,29 +304,27 @@ export default function Norce() {
                           <tr>
                             <th>Ordernr</th>
                             <th>Datum</th>
-                            <th>Kund</th>
-                            <th>Belopp</th>
+                            <th>Källa</th>
+                            <th>Leveranssätt</th>
                             <th>Status</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredOrders.map((order) => (
-                            <tr key={order.OrderId}>
+                            <tr key={order.Id}>
                               <td className="font-mono font-medium">
-                                {order.OrderNo || order.OrderId}
+                                {order.OrderNo || order.Id}
                               </td>
                               <td className="text-muted-foreground text-sm">
                                 {formatDate(order.OrderDate || order.Created)}
                               </td>
-                              <td>{order.CustomerName || '-'}</td>
-                              <td className="font-semibold">
-                                {order.OrderTotal != null
-                                  ? formatCurrency(order.OrderTotal)
-                                  : '-'}
+                              <td>{order.Source || '-'}</td>
+                              <td className="text-muted-foreground">
+                                {order.DeliveryMode || '-'}
                               </td>
                               <td>
                                 <Badge variant="secondary">
-                                  {order.StatusId ?? '-'}
+                                  Status {order.StatusId}
                                 </Badge>
                               </td>
                             </tr>
@@ -396,7 +349,7 @@ export default function Norce() {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Sök på namn, kundkod, e-post eller org.nr..."
+                  placeholder="Sök på namn, e-post eller kundkod..."
                   value={customersSearch}
                   onChange={(e) => setCustomersSearch(e.target.value)}
                   className="pl-10"
@@ -429,29 +382,37 @@ export default function Norce() {
                         <thead>
                           <tr>
                             <th>Namn</th>
-                            <th>Kundkod</th>
                             <th>E-post</th>
+                            <th>Kundkod</th>
                             <th>Telefon</th>
-                            <th>Org.nr</th>
                             <th>Status</th>
+                            <th>Skapad</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredCustomers.map((customer) => (
-                            <tr key={customer.CustomerId}>
-                              <td className="font-medium">{customer.Name || '-'}</td>
-                              <td className="font-mono text-sm text-muted-foreground">
-                                {customer.Code || '-'}
+                            <tr key={customer.Id}>
+                              <td className="font-medium">
+                                {[customer.FirstName, customer.LastName]
+                                  .filter(Boolean)
+                                  .join(' ') || '-'}
                               </td>
-                              <td className="text-muted-foreground">{customer.Email || '-'}</td>
-                              <td className="text-muted-foreground">{customer.Phone || '-'}</td>
+                              <td className="text-muted-foreground">
+                                {customer.EmailAddress || '-'}
+                              </td>
                               <td className="font-mono text-sm text-muted-foreground">
-                                {customer.OrgNo || '-'}
+                                {customer.CustomerCode || '-'}
+                              </td>
+                              <td className="text-muted-foreground">
+                                {customer.CellPhoneNumber || customer.PhoneNumber || '-'}
                               </td>
                               <td>
                                 <Badge variant={customer.IsActive ? 'default' : 'secondary'}>
                                   {customer.IsActive ? 'Aktiv' : 'Inaktiv'}
                                 </Badge>
+                              </td>
+                              <td className="text-muted-foreground text-sm">
+                                {formatDate(customer.Created)}
                               </td>
                             </tr>
                           ))}
@@ -466,81 +427,6 @@ export default function Norce() {
             <p className="text-sm text-muted-foreground">
               Visar {filteredCustomers.length} kunder
               {customers.length !== filteredCustomers.length && ` av ${customers.length}`}
-            </p>
-          </TabsContent>
-
-          {/* ─── Categories ─── */}
-          <TabsContent value="categories" className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Sök på namn eller kod..."
-                  value={categoriesSearch}
-                  onChange={(e) => setCategoriesSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => { setCategoriesFetched(false); }}
-                title="Uppdatera"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {categoriesError ? (
-              <ErrorCard message={categoriesError} onRetry={() => { setCategoriesFetched(false); }} />
-            ) : (
-              <Card>
-                <CardContent className="p-0">
-                  {categoriesLoading ? (
-                    <div className="p-8 text-center text-muted-foreground">Laddar...</div>
-                  ) : filteredCategories.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">
-                      Inga kategorier hittades
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Namn</th>
-                            <th>Kod</th>
-                            <th>Beskrivning</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredCategories.map((cat) => (
-                            <tr key={cat.CategoryId}>
-                              <td className="font-medium">{cat.Name}</td>
-                              <td className="font-mono text-sm text-muted-foreground">
-                                {cat.Code || '-'}
-                              </td>
-                              <td className="text-muted-foreground">
-                                {cat.Description || '-'}
-                              </td>
-                              <td>
-                                <Badge variant={cat.IsActive ? 'default' : 'secondary'}>
-                                  {cat.IsActive ? 'Aktiv' : 'Inaktiv'}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            <p className="text-sm text-muted-foreground">
-              Visar {filteredCategories.length} kategorier
-              {categories.length !== filteredCategories.length && ` av ${categories.length}`}
             </p>
           </TabsContent>
         </Tabs>

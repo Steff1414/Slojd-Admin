@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
       'Accept': 'application/json',
     }
     if (applicationId) {
-      norceHeaders['application-id'] = String(applicationId)
+      norceHeaders['ApplicationId'] = String(applicationId)
     }
 
     const norceRes = await fetch(fullUrl, { headers: norceHeaders })

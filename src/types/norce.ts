@@ -6,104 +6,76 @@ export interface NorceODataResponse<T> {
   value: T[];
 }
 
-// Products
+// Products (from Products/Products)
 export interface NorceProduct {
-  ProductId: number;
-  Name: string;
-  SubHeader?: string;
-  Code: string;
-  ManufacturerCode?: string;
-  StatusId?: number;
-  IsActive: boolean;
-  Created?: string;
-  Updated?: string;
-  Description?: string;
-  DescriptionHeader?: string;
-  UniqueName?: string;
-  CategoryId?: number;
-  CategoryName?: string;
-  Skus?: NorceProductSku[];
-  PriceLists?: NorcePriceListItem[];
-}
-
-// Product SKUs
-export interface NorceProductSku {
-  SkuId: number;
-  ProductId: number;
-  PartNo: string;
+  Id: number;
+  ClientId: number;
+  ManufacturerId?: number;
   ManufacturerPartNo?: string;
-  Name?: string;
+  DefaultName: string;
+  DefaultSubHeader?: string;
+  DefaultDescription?: string;
+  DefaultDescriptionHeader?: string;
+  DefaultImagePath?: string;
+  IsVariant: boolean;
+  VariantId?: number;
+  Alias?: string;
+  DefaultTitle?: string;
+  DefaultTags?: string;
+}
+
+// Product SKUs (from Products/ProductSkus)
+export interface NorceProductSku {
+  PartNo: string;
+  ProductId: number;
+  ClientId: number;
+  StatusId: number;
+  TypeId: number;
   EanCode?: string;
-  StatusId?: number;
-  IsActive: boolean;
-  StockLevel?: number;
-  PriceLists?: NorcePriceListItem[];
+  IsPublished: boolean;
+  GrossWeight?: number;
+  NetWeight?: number;
+  UnitOfMeasurementId?: number;
+  ImagePath?: string;
 }
 
-export interface NorcePriceListItem {
-  PriceListId: number;
-  Price: number;
-  PriceOriginal?: number;
-  Currency?: string;
-  IsActive: boolean;
-}
-
-// Customers
+// Customers (from Customers/Customers)
 export interface NorceCustomer {
-  CustomerId: number;
-  Code?: string;
-  Name?: string;
-  Email?: string;
-  Phone?: string;
-  OrgNo?: string;
+  Id: number;
+  Key: string;
+  ClientId: number;
+  CustomerCode?: string;
+  TypeId: number;
+  EmailAddress?: string;
+  FirstName?: string;
+  MiddleName?: string;
+  LastName?: string;
+  PhoneNumber?: string;
+  CellPhoneNumber?: string;
   IsActive: boolean;
   Created?: string;
   Updated?: string;
-  CustomerType?: number;
-  Address1?: string;
-  Address2?: string;
-  City?: string;
-  ZipCode?: string;
-  Country?: string;
+  UseBillingAddressAsShippingAddress?: boolean;
 }
 
-// Orders
+// Orders (from Orders/Orders)
 export interface NorceOrder {
-  OrderId: number;
+  Id: number;
+  ClientId: number;
+  ApplicationId: number;
   OrderNo?: string;
   OrderDate?: string;
-  StatusId?: number;
-  CustomerId?: number;
-  CustomerName?: string;
-  PaymentStatusId?: number;
-  OrderTotal?: number;
-  Currency?: string;
+  StatusId: number;
+  Source?: string;
+  DeliveryMode?: string;
+  IsPartDelivery: boolean;
+  BuyerCustomerId?: number;
+  BuyerCompanyId?: number;
+  PayerCustomerId?: number;
+  PayerCompanyId?: number;
+  CurrencyCode?: string;
   Created?: string;
   Updated?: string;
-  OrderItems?: NorceOrderItem[];
-}
-
-export interface NorceOrderItem {
-  OrderItemId: number;
-  OrderId: number;
-  ProductId?: number;
-  ProductName?: string;
-  PartNo?: string;
-  Quantity: number;
-  Price: number;
-  LineTotal: number;
-}
-
-// Categories
-export interface NorceCategory {
-  CategoryId: number;
-  ParentCategoryId?: number;
-  Name: string;
-  Code?: string;
-  Description?: string;
-  SortOrder?: number;
-  IsActive: boolean;
-  Level?: number;
 }
 
 // Query parameters for the proxy
