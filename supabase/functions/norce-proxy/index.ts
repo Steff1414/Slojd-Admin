@@ -18,8 +18,10 @@ async function getNorceToken(): Promise<string> {
     return cachedToken
   }
 
-  const clientId = Deno.env.get('NORCE_CLIENT_ID')!
-  const clientSecret = Deno.env.get('NORCE_CLIENT_SECRET')!
+  // Demo/playground credentials — hardcoded since Lovable Cloud
+  // manages Supabase and we can't set secrets via CLI
+  const clientId = 'bbd0c062-2bd8-46f2-9b9b-6d13c4caf14e'
+  const clientSecret = 'e152968f-cde7-4f88-ab21-57293a2ccda2'
 
   const body = new URLSearchParams({
     grant_type: 'client_credentials',
