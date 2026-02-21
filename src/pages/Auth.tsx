@@ -166,14 +166,9 @@ export default function Auth() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Building2 className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">CRM Demo</h1>
-            <p className="text-sm text-muted-foreground">Kund- och relationshantering</p>
-          </div>
+        <div className="flex flex-col items-center mb-8">
+          <img src="/logo.jpeg" alt="Slöjd-Detaljer" className="h-12 mb-2" />
+          <p className="text-sm text-muted-foreground">Administrera produkter, kunder och ordrar</p>
         </div>
 
         <Card className="shadow-lg border-border/50">
@@ -394,7 +389,7 @@ export default function Auth() {
         </Card>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Demo-applikation för kund- och relationshantering
+          Slöjd-Admin — produkter, kunder och ordrar
         </p>
       </div>
     </div>

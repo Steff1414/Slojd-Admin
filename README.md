@@ -71,3 +71,34 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Norce Commerce setup (instance-specific)
+
+`norce-proxy` can now derive API endpoints from a Norce admin URL.
+
+Set these Supabase Edge Function secrets:
+
+- `NORCE_CLIENT_ID`
+- `NORCE_CLIENT_SECRET`
+- `NORCE_ADMIN_URL` (your admin URL)
+- `NORCE_SCOPE` (`prod`, `stage`, or `playground`)
+- `NORCE_DEFAULT_APP_ID` (your Norce Application ID)
+
+Optional overrides:
+
+- `NORCE_TOKEN_URL`
+- `NORCE_QUERY_BASE`
+
+Frontend env (local build/runtime):
+
+- `VITE_NORCE_APPLICATION_ID` (defaults to `1042`)
+
+### Example: Slojddetaljer production
+
+- `NORCE_ADMIN_URL=https://slojddetaljer.admin-se.norce.tech`
+- `NORCE_SCOPE=prod`
+
+### Example: Norce Open Demo (playground)
+
+- `NORCE_ADMIN_URL=https://norce-open-demo.admin-se.playground.norce.tech`
+- `NORCE_SCOPE=playground`

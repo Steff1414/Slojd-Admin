@@ -1,0 +1,4 @@
+interface:
+  display_name: "Norce Assistant MCP"
+  short_description: "Configure and use Norce Assistant MCP securely"
+  default_prompt: "Use $norce-assistant-mcp to set up Norce Assistant MCP with API key or Google auth and validate the connection."
